@@ -22,5 +22,5 @@ fn main() {
 
     let mut app = App::new(&get_screen_size()).unwrap();
 
-    app.run().unwrap();
+    let val = app.run();
 }

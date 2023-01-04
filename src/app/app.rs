@@ -30,12 +30,7 @@ const SPAWN_GAME_LOOPS: u32 = 5;
 
 impl App {
     pub fn new(dimensions: &Point<u32>) -> Result<App, DisplayControllerError> {
-        // let dimensions = dimensions.unwrap_or_else(|| {
-        //     let (rows, columns) = size().unwrap();
-
-        //     &Point::new(rows as u32, columns as u32)
-        // });
-
+        dbg!(dimensions);
         let mut output = Output::new(stdout());
 
         let display_controller = DisplayController::new(dimensions);
@@ -91,11 +86,11 @@ impl App {
                         self.game_state.keyboard_event = Some(event);
                     }
 
-                    if spawn_in_loops == 0 {
-                        self.asteroids.push(Asteroid::new(&self.dimensions));
+                    // if spawn_in_loops == 0 {
+                    // self.asteroids.push(Asteroid::new(&self.dimensions));
 
-                        spawn_in_loops = SPAWN_GAME_LOOPS;
-                    }
+                    // spawn_in_loops = SPAWN_GAME_LOOPS;
+                    // }
 
                     // let test_items: Vec<Box<dyn Drawable>> = Vec::new():
 
@@ -135,13 +130,14 @@ impl App {
 
                     self.output.print_display(&self.display_controller.layout)?;
 
-                    spawn_in_loops -= 1;
+                    // spawn_in_loops -= 1;
                 }
-
+                dbg!("HMMM????");
+                dbg!(self.game_state.is_running());
                 Ok(())
             },
         ));
-
+        dbg!("Done!");
         //   if let Err(_) = result {
         //     DisplayController::close(&mut self.display_controller.target)?;
         // }
@@ -159,6 +155,7 @@ impl App {
     }
 
     pub fn shut_down(&mut self) -> Result<(), DisplayControllerError> {
+        dbg!("Shutting down");
         self.output.close();
 
         Ok(())

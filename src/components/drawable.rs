@@ -45,8 +45,6 @@ pub trait Drawable {
         let converted_location: Point<i64> = drawable_state.location.into();
         let mut updated_position: Point<i64> = converted_location + drawable_state.velocity;
 
-        // if ()
-
         if updated_position.height < 0 {
             updated_position.height = 0;
         }

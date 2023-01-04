@@ -1,5 +1,7 @@
+use crossterm::style::Color;
+
 use super::{
-    element::{parse_str_to_element_array, Element},
+    element::{parse_str_to_element_array, Element, DEFAULT_BACKGROUND},
     DisplayControllerError, Point,
 };
 
@@ -52,14 +54,61 @@ impl Layout {
 
         let width = rows.into_iter().max_by_key(|row| row.len()).unwrap().len();
 
-        // let audit_element = Element::new(' ', Color::Cyan, Color::Cyan);
-
         let mut map: Vec<Vec<Option<Element>>> =
             vec![vec![None; width as usize]; ascii.split("\n").count()];
 
         for (index, row) in ascii.split("\n").enumerate() {
             map[index] = parse_str_to_element_array(row);
         }
+
+        Layout::from_map(map, None)
+    }
+
+    pub fn from_file(path: &str) -> Self {
+        let img = image::open(path).unwrap();
+        let rgb_img = img.to_rgb8();
+
+        let (width, height) = (img.width(), img.height());
+
+        let raw_rgb = rgb_img.to_vec();
+
+        dbg!(width);
+        dbg!(height);
+
+        // Use a 1D vector before converting to the 2D vector to simplify the logic
+        let mut converted_items: Vec<Option<Element>> = vec![None; (width * height) as usize];
+
+        for index in (0..converted_items.len()) {
+            let base_index = index * 3;
+            let (r, g, b) = (
+                raw_rgb[base_index],
+                raw_rgb[base_index + 1],
+                raw_rgb[base_index + 2],
+            );
+
+            converted_items[index] = Some(Element::new(
+                ' ',
+                DEFAULT_BACKGROUND,
+                Color::Rgb { r, g, b },
+            ));
+        }
+
+        let mut map = vec![vec![None; width as usize]; height as usize];
+
+        for index in 0..converted_items.len() as u32 {
+            let height = index / width;
+            let width = index % width;
+
+            map[height as usize][width as usize] = converted_items[index as usize];
+        }
+
+        // for index in (0..raw_rgb.len()).step_by(3) {
+        //
+
+        //
+
+        //     // map[]
+        // }
 
         Layout::from_map(map, None)
     }
@@ -104,18 +153,15 @@ impl Layout {
         Ok(row)
     }
 
-    // pub fn get_column_mut(&mut self, column_number: u32) -> MapResult<Vec<&mut Option<Element>>> {
-    // let mut items: Vec<&mut Option<Element>> =
-    //     Vec::with_capacity(self.dimensions.height as usize);
+    // pub fn get_column_mut(&mut self, column_number: u32) -> MapResult<Vec<Option<&mut Element>>> {
+    //     let mut items: Vec<Option<&mut Element>> =
+    //         Vec::with_capacity(self.dimensions.height as usize);
 
-    // for height in 0..self.dimensions.height {
-    //     let element = self.get_element_mut(&Point {
-    //         width: column_number,
-    //         height,
-    //     })?;
+    //     for height in 0..self.dimensions.height as usize {
+    //         let element = self.map[height][column_number as usize].as_mut();
 
-    //     items[height as usize] = element;
-    // }
+    //         items[height] = element;
+    //     }
 
     //     Ok(items)
     // }

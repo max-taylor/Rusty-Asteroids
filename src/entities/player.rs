@@ -20,10 +20,10 @@ impl Player {
             height: 5,
         };
 
-        let map = Layout::from_ascii(SPACE_SHIP);
+        let layout = Layout::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: DrawableState::new(map, location, DrawableType::Player, None),
+            drawable: DrawableState::new(layout, location, DrawableType::Player, None),
         }
     }
 }
