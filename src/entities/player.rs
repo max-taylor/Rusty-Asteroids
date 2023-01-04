@@ -1,40 +1,16 @@
+use crossterm::event::KeyCode;
+
 use crate::{
-    api::display::{Element, Map, Point},
+    api::display::{Map, Point},
     components::Drawable,
 };
 
-use super::Controller;
+use super::{consts::SPACE_SHIP, controller::create_event, Controller};
 
 pub struct Player {
     pub drawable: Drawable,
     pub move_speed: u32,
 }
-
-const SPACE_SHIP: &str = "
-       _________
-      (=========)
-      |=========|
-      |====_====|
-      |== / \\ ==|
-      |= / _ \\/ =|
-   _  |=| ( ) |=|
-  /=\\ |=|     |=| /=\\
-  |=| |=| USA |=| |=|
-  |=| |=|  _  |=| |=|
-  |=| |=| | | |=| |=|
-  |=| |=| | | |=| |=|
-  |=| |=| | | |=| |=|
-  |=| |/  | |  \\| |=|
-  |=|/    | |    \\|=|
-  |=/NASA |_| NASA\\=|
-  |(_______________)|
-  |=| |_|__|__|_| |=|
-  |=|   ( ) ( )   |=|
- /===\\           /===\\
-|||||||         |||||||
--------         -------
- (~~~)           (~~~)
-";
 
 impl Player {
     pub fn new(dimensions: &Point) -> Self {
@@ -73,6 +49,14 @@ impl Controller for Player {
 
     fn right(&mut self) -> &mut Self {
         self.drawable.location.width += self.move_speed;
+
+        self
+    }
+
+    fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
+        if event == &create_event(KeyCode::Enter) {
+            // Spawn bullet
+        }
 
         self
     }

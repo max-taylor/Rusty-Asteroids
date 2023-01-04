@@ -24,7 +24,9 @@ pub fn parse_str_to_element_array(string_array: &str) -> Vec<Option<Element>> {
     let mut array = vec![None; string_array.len()];
 
     for (index, character) in string_array.chars().enumerate() {
-        array[index] = Some(Element::new_default_colors(character));
+        if character != ' ' {
+            array[index] = Some(Element::new_default_colors(character));
+        }
     }
 
     array

@@ -1,6 +1,6 @@
 use crossterm::event::{Event, KeyCode};
 
-fn create_event(keycode: KeyCode) -> Event {
+pub fn create_event(keycode: KeyCode) -> Event {
     Event::Key(keycode.into())
 }
 
@@ -9,6 +9,8 @@ pub trait Controller {
     fn down(&mut self) -> &mut Self;
     fn left(&mut self) -> &mut Self;
     fn right(&mut self) -> &mut Self;
+
+    fn additional_event_logic(&mut self, event: &Event) -> &mut Self;
 
     fn handle_event(&mut self, event: &Event) -> &mut Self {
         if event == &create_event(KeyCode::Up) {
@@ -21,6 +23,6 @@ pub trait Controller {
             return self.right();
         }
 
-        self
+        self.additional_event_logic(event)
     }
 }

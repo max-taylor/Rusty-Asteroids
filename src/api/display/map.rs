@@ -1,5 +1,3 @@
-use crossterm::style::Color;
-
 use super::{
     element::{parse_str_to_element_array, Element},
     DisplayControllerError, Point,
@@ -53,14 +51,14 @@ impl Map {
 
         let width = rows.into_iter().max_by_key(|row| row.len()).unwrap().len();
 
-        let audit_element = Element::new(' ', Color::Cyan, Color::Cyan);
+        // let audit_element = Element::new(' ', Color::Cyan, Color::Cyan);
 
         let mut map: Vec<Vec<Option<Element>>> =
-            vec![vec![Some(audit_element); width as usize]; ascii.split("\n").count()];
+            vec![vec![None; width as usize]; ascii.split("\n").count()];
 
-        // for (index, row) in ascii.split("\n").enumerate() {
-        //     map[index] = parse_str_to_element_array(row);
-        // }
+        for (index, row) in ascii.split("\n").enumerate() {
+            map[index] = parse_str_to_element_array(row);
+        }
 
         Map::from_map(map, None)
     }
