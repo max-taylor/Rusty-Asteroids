@@ -1,4 +1,4 @@
-use crate::api::DisplayController;
+use crate::api::display::DisplayController;
 
 use super::Position;
 

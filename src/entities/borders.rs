@@ -1,5 +1,5 @@
 use crate::{
-    api::{Map, Point},
+    api::display::{Map, Point},
     systems::position::Position,
 };
 

@@ -1,4 +1,4 @@
-use crate::api::{Map, Point};
+use crate::api::display::{Map, Point};
 
 pub struct Position<'dimensions> {
     /// 2D vector describing the given entities elements, is an Option<Element> to simplify drawing items that contain deadspace

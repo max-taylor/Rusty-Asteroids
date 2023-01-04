@@ -7,7 +7,7 @@ use crossterm::{
 };
 
 use crate::{
-    api::{DisplayController, Point},
+    api::display::{DisplayController, DisplayControllerError, Point},
     entities::{Controller, Player},
     systems::position::{Position, PositionController},
 };
@@ -18,17 +18,15 @@ pub struct App<'dimensions> {
 }
 
 impl<'dimensions> App<'dimensions> {
-    pub fn new(dimensions: Point) -> Result<(), CrosstermError> {
-        enable_raw_mode()?;
+    pub fn new(dimensions: Point) -> Result<(), DisplayControllerError> {
+        enable_raw_mode().map_err(DisplayControllerError::from_crossterm_error);
 
         let mut display_controller = DisplayController::new(&dimensions);
 
         if let Some(error) = display_controller.as_ref().err() {
             DisplayController::close(&mut stdout());
 
-            let cloned_error = error.clone();
-
-            return Err(Error::new(cloned_error.kind(), "Boot-up error"));
+            return Err(error.clone());
         }
 
         // let position_controller = PositionController::new(vec![], &mut display_controller);

@@ -4,7 +4,7 @@ mod components;
 mod entities;
 mod systems;
 
-use crate::api::Point;
+use crate::api::display::Point;
 use app::App;
 
 fn main() {
