@@ -21,7 +21,7 @@ pub struct App {
     game_state: GameState,
     borders: Borders,
     player: Player,
-    bullets: Vec<Bullet>,
+    // bullets: Vec<Bullet>,
     asteroids: Vec<Asteroid>,
     dimensions: Point<u32>,
 }
@@ -47,7 +47,7 @@ impl App {
             borders: Borders::new(dimensions)?,
             output,
             player: Player::new(),
-            bullets: Default::default(),
+            // bullets: Default::default(),
             asteroids: Default::default(),
             dimensions: *dimensions,
         })
@@ -96,41 +96,13 @@ impl App {
 
                     // let entities_in_frame: Vec<dyn Drawable> = vec![self.player, self.borders];
 
-                    self.display_controller.draw_drawable(&self.borders)?;
-
                     if let Some(event) = &self.game_state.keyboard_event {
-                        if event == &create_event(KeyCode::Enter) {
-                            // TODO: Refactor this
-                            let spawn_position = self
-                                .player
-                                .drawable
-                                .location
-                                .add_width(self.player.drawable.layout.dimensions.width / 2)
-                                .sub_height(1);
-
-                            self.bullets.push(Bullet::new(spawn_position));
-                        }
-
                         self.player.handle_event(&event);
                     }
 
-                    update_positions(vec![&mut self.player]);
-                    update_positions(self.bullets.iter_mut().collect());
-                    update_positions(self.asteroids.iter_mut().collect());
-
-                    self.display_controller
-                        .draw_vec_drawable(self.bullets.iter().collect())?;
-
-                    self.display_controller
-                        .draw_vec_drawable(self.asteroids.iter().collect())?;
-
-                    self.display_controller.draw_drawable(&self.player)?;
-
-                    // let drawable_items: Vec<impl Drawable> = vec![self.borders];
+                    self.update_positions().draw_all_entities()?;
 
                     self.output.print_display(&self.display_controller.layout)?;
-
-                    // spawn_in_loops -= 1;
                 }
                 dbg!("HMMM????");
                 dbg!(self.game_state.is_running());
@@ -145,6 +117,31 @@ impl App {
         self.shut_down()?;
 
         Ok(())
+    }
+
+    fn update_positions(&mut self) -> &mut Self {
+        self.player.update_position();
+
+        self.player.bullets.entities.iter_mut().for_each(|bullet| {
+            bullet.update_position();
+        });
+
+        self.asteroids.iter_mut().for_each(|asteroid| {
+            asteroid.update_position();
+        });
+
+        self
+    }
+
+    /// Method to handle drawing all the entities that will be rendered
+    fn draw_all_entities(&mut self) -> Result<&mut Self, DisplayControllerError> {
+        self.display_controller
+            .draw_drawable(&self.borders)?
+            .draw_drawable(&self.player)?
+            .draw_vec_drawable(self.player.bullets.entities.iter().collect())?
+            .draw_vec_drawable(self.asteroids.iter().collect())?;
+
+        Ok(self)
     }
 
     pub fn start(&mut self) -> Result<(), DisplayControllerError> {

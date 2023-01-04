@@ -2,13 +2,14 @@ use crossterm::event::KeyCode;
 
 use crate::{
     api::display::{Layout, Point},
-    components::{Drawable, DrawableState, DrawableType},
+    components::{Drawable, DrawableState, DrawableType, Spawnable},
 };
 
-use super::{consts::SPACE_SHIP, controller::create_event, Controller};
+use super::{consts::SPACE_SHIP, controller::create_event, Bullet, Controller};
 
 pub struct Player {
     pub drawable: DrawableState,
+    pub bullets: Spawnable<Bullet>,
 }
 
 const MAX_VELOCITY: i64 = 1;
@@ -24,6 +25,7 @@ impl Player {
 
         Self {
             drawable: DrawableState::new(layout, location, DrawableType::Player, None),
+            bullets: Default::default(),
         }
     }
 }
@@ -67,9 +69,14 @@ impl Controller for Player {
 
     fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
         self.drawable.velocity = Default::default();
-
         if event == &create_event(KeyCode::Enter) {
-            // Spawn bullet
+            let spawn_position = self
+                .drawable
+                .location
+                .add_width(self.drawable.layout.dimensions.width / 2)
+                .add_height(1);
+
+            self.bullets.spawn(Bullet::new(spawn_position));
         }
 
         self

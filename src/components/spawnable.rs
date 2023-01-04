@@ -1,5 +1,17 @@
-use crate::api::display::Element;
+pub struct Spawnable<T> {
+    pub entities: Vec<T>,
+}
 
-trait Spawnable {
-    fn spawn(&mut self, item: Element) -> &mut Self;
+impl<T> Spawnable<T> {
+    pub fn spawn(&mut self, entity: T) -> &mut Self {
+        self.entities.push(entity);
+
+        self
+    }
+}
+
+impl<T> Default for Spawnable<T> {
+    fn default() -> Self {
+        Self { entities: vec![] }
+    }
 }
