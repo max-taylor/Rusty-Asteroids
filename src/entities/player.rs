@@ -12,7 +12,12 @@ pub struct Player {
     pub bullets: Spawnable<Bullet>,
 }
 
-const MAX_VELOCITY: i64 = 1;
+const WIDTH_MAX_VELOCITY: i64 = 2;
+const HEIGHT_MAX_VELOCITY: i64 = 1;
+
+trait CanSpawn {
+    fn get_spawnable_entities<T>(&self) -> Spawnable<T>;
+}
 
 impl Player {
     pub fn new() -> Self {
@@ -28,7 +33,17 @@ impl Player {
             bullets: Default::default(),
         }
     }
+
+    // pub fn get_spawnable_entities(&self) -> Spawnable<Bullet> {
+    // self.bullets
+    // }
 }
+
+// impl CanSpawn for Player {
+// fn get_spawnable_entities<Bullet>(&self) -> Spawnable<Bullet> {
+// self.bullets
+// }
+// }
 
 impl Drawable for Player {
     fn get_drawable_state(&self) -> &DrawableState {
@@ -44,36 +59,37 @@ impl Drawable for Player {
 
 impl Controller for Player {
     fn up(&mut self) -> &mut Self {
-        self.drawable.velocity = Point::new(0, -MAX_VELOCITY);
+        self.drawable.velocity = Point::new(0, -HEIGHT_MAX_VELOCITY);
 
         self
     }
 
     fn down(&mut self) -> &mut Self {
-        self.drawable.velocity = Point::new(0, MAX_VELOCITY);
+        self.drawable.velocity = Point::new(0, HEIGHT_MAX_VELOCITY);
 
         self
     }
 
     fn left(&mut self) -> &mut Self {
-        self.drawable.velocity = Point::new(-MAX_VELOCITY, 0);
+        self.drawable.velocity = Point::new(-WIDTH_MAX_VELOCITY, 0);
 
         self
     }
 
     fn right(&mut self) -> &mut Self {
-        self.drawable.velocity = Point::new(MAX_VELOCITY, 0);
+        self.drawable.velocity = Point::new(WIDTH_MAX_VELOCITY, 0);
 
         self
     }
 
     fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
-        self.drawable.velocity = Default::default();
+        // self.drawable.velocity = Default::default();
+
         if event == &create_event(KeyCode::Enter) {
             let spawn_position = self
                 .drawable
                 .location
-                .add_width(self.drawable.layout.dimensions.width / 2)
+                .add_width(self.drawable.layout.dimensions.width / 2 - 1)
                 .add_height(1);
 
             self.bullets.spawn(Bullet::new(spawn_position));
