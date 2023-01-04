@@ -18,12 +18,17 @@ pub enum DrawableType {
 }
 
 impl DrawableState {
-    pub fn new(layout: Layout, location: Point<u32>, drawable_type: DrawableType) -> Self {
+    pub fn new(
+        layout: Layout,
+        location: Point<u32>,
+        drawable_type: DrawableType,
+        velocity: Option<Point<i64>>,
+    ) -> Self {
         Self {
             layout,
             location,
             drawable_type,
-            velocity: Default::default(),
+            velocity: velocity.unwrap_or(Default::default()),
         }
     }
 }

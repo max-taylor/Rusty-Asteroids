@@ -6,17 +6,6 @@ use crate::{
     components::{Drawable, DrawableState, DrawableType},
 };
 
-// let spaceship: Vec<Vec<Option<Element>>> = [
-//     [None, Some(ARROW_ELEMENT), None],
-//     [
-//         Some(ARROW_ELEMENT),
-//         Some(ARROW_ELEMENT),
-//         Some(ARROW_ELEMENT),
-//     ],
-// ]
-// .map(|row| row.to_vec())
-// .to_vec();
-
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
 pub struct Asteroid {
@@ -33,8 +22,18 @@ impl Asteroid {
             Some(ARROW_ELEMENT),
         );
 
+        let velocity: Point<i64> = Point {
+            height: 5,
+            width: 0,
+        };
+
         Self {
-            drawable: DrawableState::new(map, Default::default(), DrawableType::Enemy),
+            drawable: DrawableState::new(
+                map,
+                Default::default(),
+                DrawableType::Enemy,
+                Some(velocity),
+            ),
         }
     }
 }

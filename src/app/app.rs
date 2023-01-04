@@ -20,6 +20,7 @@ pub struct App {
     game_state: GameState,
     borders: Borders,
     player: Player,
+    bullets: Vec<Bullet>,
     asteroids: Vec<Asteroid>,
 }
 
@@ -47,6 +48,7 @@ impl App {
             borders: Borders::new(dimensions)?,
             output,
             player: Player::new(),
+            bullets: Default::default(),
             asteroids: Default::default(),
         })
     }
@@ -90,13 +92,25 @@ impl App {
 
                     if let Some(event) = &self.game_state.keyboard_event {
                         if event == &create_event(KeyCode::Enter) {
-                            // self.asteroids.push(Bullet::new());
+                            // TODO: Refactor this
+                            let spawn_position = self
+                                .player
+                                .drawable
+                                .location
+                                .add_width(self.player.drawable.layout.dimensions.width / 2)
+                                .sub_height(1);
+
+                            self.bullets.push(Bullet::new(spawn_position));
                         }
 
                         self.player.handle_event(&event);
                     }
 
                     update_positions(vec![&mut self.player]);
+                    update_positions(self.bullets.iter_mut().collect());
+
+                    self.display_controller
+                        .draw_vec_drawable(self.bullets.iter().collect())?;
 
                     self.display_controller.draw_drawable(&self.player)?;
 

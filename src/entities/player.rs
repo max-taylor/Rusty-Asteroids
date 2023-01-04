@@ -23,7 +23,7 @@ impl Player {
         let map = Layout::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: DrawableState::new(map, location, DrawableType::Player),
+            drawable: DrawableState::new(map, location, DrawableType::Player, None),
         }
     }
 }
