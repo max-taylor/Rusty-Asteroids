@@ -1,5 +1,7 @@
 use crossterm::event::{Event, KeyCode};
 
+use crate::components::Position;
+
 use super::controller::Controller;
 
 pub struct Player {}
@@ -7,6 +9,16 @@ pub struct Player {}
 impl Player {
     pub fn new() -> Self {
         Self {}
+    }
+}
+
+impl Position for Player {
+    fn new(position: crate::systems::display::Point, value: char) -> Self {
+        todo!()
+    }
+
+    fn update_position(&mut self, new_position: crate::systems::display::Point) -> &mut Self {
+        todo!()
     }
 }
 

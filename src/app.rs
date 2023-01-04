@@ -9,17 +9,17 @@ use crate::{
     systems::display::{DisplayController, Point},
 };
 
-pub struct App {
-    display_controller: DisplayController,
+pub struct App<'dimensions> {
+    display_controller: DisplayController<'dimensions>,
     player: Player,
 }
 
-impl App {
+impl<'dimensions> App<'dimensions> {
     pub fn new(dimensions: Point) -> Result<()> {
         enable_raw_mode()?;
 
         let mut app = App {
-            display_controller: DisplayController::new(dimensions),
+            display_controller: DisplayController::new(&dimensions),
             player: Player::new(),
         };
 
@@ -37,6 +37,8 @@ impl App {
 
                 break;
             }
+
+            if event == Event::Key(KeyCode::Left.into()) {}
 
             self.player.handle_event(event);
 
