@@ -1,14 +1,10 @@
 use std::{io::stdout, panic, time::Duration};
 
-use crossterm::{
-    event::{poll, read, Event, KeyCode},
-    terminal::{enable_raw_mode, size},
-};
+use crossterm::event::{poll, read, Event, KeyCode};
 
 use crate::{
-    api::display::{DisplayController, DisplayControllerError, Layout, Output, Point},
+    api::display::{DisplayController, DisplayControllerError, Output, Point},
     entities::Borders,
-    systems::drawable::DrawableController,
 };
 
 use super::game_state::GameState;
@@ -26,7 +22,7 @@ impl App {
         let display_controller = DisplayController::new(&dimensions, true);
 
         if let Some(error) = display_controller.as_ref().err() {
-            output.close();
+            output.close()?;
 
             return Err(error.clone());
         }
@@ -50,14 +46,9 @@ impl App {
 
     pub fn run<F>(&mut self, mut frame_action: F) -> Result<(), DisplayControllerError>
     where
-        F: FnMut(
-            &mut GameState,
-            &mut DisplayController,
-            &mut DrawableController,
-        ) -> Result<(), DisplayControllerError>,
+        F: FnMut(&mut GameState, &mut DisplayController) -> Result<(), DisplayControllerError>,
     {
-        self.game_state.start_game();
-        self.output.start();
+        self.start()?;
 
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
@@ -68,7 +59,7 @@ impl App {
                         let event = read()?;
 
                         if event == Event::Key(KeyCode::Esc.into()) {
-                            self.output.close();
+                            self.output.close()?;
 
                             break;
                         }
@@ -76,22 +67,11 @@ impl App {
                         self.game_state.keyboard_event = Some(event);
                     }
 
-                    // Creating a new instance of the drawable controller each loop, inefficient but simplifies development
-                    let mut drawable_controller: DrawableController = Default::default();
+                    self.display_controller.draw_drawable(&self.borders)?;
 
-                    drawable_controller.add_drawable_entity(&self.borders);
-
-                    frame_action(
-                        &mut self.game_state,
-                        &mut self.display_controller,
-                        &mut drawable_controller,
-                    )?;
+                    frame_action(&mut self.game_state, &mut self.display_controller)?;
 
                     self.output.print_display(&self.display_controller.layout)?;
-
-                    //     self.display_controller
-                    //         .draw_drawable(&self.borders.drawable)?
-                    //         .print_display()?;
                 }
 
                 Ok(())
@@ -103,6 +83,13 @@ impl App {
         // }
 
         self.shut_down()?;
+
+        Ok(())
+    }
+
+    pub fn start(&mut self) -> Result<(), DisplayControllerError> {
+        self.game_state.start_game();
+        self.output.start()?;
 
         Ok(())
     }

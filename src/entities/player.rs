@@ -11,7 +11,7 @@ pub struct Player {
     pub drawable: DrawableState,
 }
 
-const MAX_VELOCITY: i32 = 1;
+const MAX_VELOCITY: i64 = 1;
 
 impl Player {
     pub fn new() -> Self {

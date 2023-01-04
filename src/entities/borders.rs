@@ -11,12 +11,12 @@ pub struct Borders {
 impl Borders {
     pub fn new(dimensions: &Point) -> Result<Self, DisplayControllerError> {
         let mut drawable = DrawableState {
-            map: Layout::new(dimensions, None),
+            layout: Layout::new(dimensions, None),
             location: Point::default(),
             velocity: Default::default(),
         };
 
-        drawable.map.draw_rect(
+        drawable.layout.draw_rect(
             &Default::default(),
             dimensions,
             Element::new_default_colors('x'),

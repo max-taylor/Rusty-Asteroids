@@ -1,14 +1,9 @@
-use std::io::{self, stdout, Write};
-
 use crossterm::terminal::size;
 
-use crate::components::DrawableState;
+use crate::components::Drawable;
 
-use super::{display_controller_error::DisplayControllerError, output::Output, Layout};
-use super::{
-    element::{Element, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
-    Point,
-};
+use super::Point;
+use super::{display_controller_error::DisplayControllerError, Layout};
 
 pub struct DisplayController {
     offset: Point,
@@ -52,11 +47,12 @@ impl DisplayController {
 
     pub fn draw_drawable(
         &mut self,
-        drawable: &DrawableState,
+        drawable: &impl Drawable,
     ) -> DisplayControllerResult<&mut Self> {
-        let base_location = drawable.location + self.offset;
+        let drawable_state = drawable.get_drawable_state();
+        let base_location = drawable_state.location + self.offset;
         // Iterate over each row in the map
-        for (num_row, drawable_row) in drawable.map.map.iter().enumerate() {
+        for (num_row, drawable_row) in drawable_state.layout.map.iter().enumerate() {
             // Then each column in the row
             for num_column in 0..drawable_row.len() {
                 if let Some(has_element) = drawable_row[num_column] {

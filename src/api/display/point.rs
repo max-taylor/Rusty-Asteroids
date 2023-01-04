@@ -2,6 +2,8 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crossterm::cursor::MoveTo;
 
+use crate::components::Velocity;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Point {
     pub width: u32,

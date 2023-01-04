@@ -19,13 +19,13 @@ fn main() {
 
     let mut app = App::new(dimensions).unwrap();
 
-    app.run(move |game_state, display_controller, drawable_controller| {
+    app.run(|game_state, display_controller| {
         if let Some(event) = &game_state.keyboard_event {
             player.handle_event(&event);
         }
 
         // Game logic
-        // drawable_controller.add_drawable_entity(&mut player);
+        display_controller.draw_drawable(&mut player)?;
 
         Ok(())
     })
