@@ -1,6 +1,6 @@
 use crate::{
-    api::display::{DisplayControllerError, Element, Map, Point},
-    components::DrawableState,
+    api::display::{DisplayControllerError, Element, Layout, Point},
+    components::{Drawable, DrawableState},
 };
 
 #[derive(Debug)]
@@ -11,9 +11,9 @@ pub struct Borders {
 impl Borders {
     pub fn new(dimensions: &Point) -> Result<Self, DisplayControllerError> {
         let mut drawable = DrawableState {
-            map: Map::new(dimensions, None),
+            map: Layout::new(dimensions, None),
             location: Point::default(),
-            velocity: 0,
+            velocity: Default::default(),
         };
 
         drawable.map.draw_rect(
@@ -23,5 +23,11 @@ impl Borders {
         )?;
 
         Ok(Self { drawable })
+    }
+}
+
+impl Drawable for Borders {
+    fn get_drawable_state(&self) -> &DrawableState {
+        &self.drawable
     }
 }

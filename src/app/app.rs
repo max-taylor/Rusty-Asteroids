@@ -2,30 +2,31 @@ use std::{io::stdout, panic, time::Duration};
 
 use crossterm::{
     event::{poll, read, Event, KeyCode},
-    terminal::enable_raw_mode,
+    terminal::{enable_raw_mode, size},
 };
 
 use crate::{
-    api::display::{DisplayController, DisplayControllerError, Map, Point},
+    api::display::{DisplayController, DisplayControllerError, Layout, Output, Point},
     entities::Borders,
-    game_state::GameState,
     systems::drawable::DrawableController,
 };
 
+use super::game_state::GameState;
+
 pub struct App {
     display_controller: DisplayController,
+    output: Output,
     game_state: GameState,
     borders: Borders,
 }
 
 impl App {
     pub fn new(dimensions: &Point) -> Result<App, DisplayControllerError> {
-        enable_raw_mode().map_err(DisplayControllerError::from_crossterm_error)?;
-
-        let display_controller = DisplayController::new(&dimensions);
+        let mut output = Output::new(stdout());
+        let display_controller = DisplayController::new(&dimensions, true);
 
         if let Some(error) = display_controller.as_ref().err() {
-            DisplayController::close(&mut stdout())?;
+            output.close();
 
             return Err(error.clone());
         }
@@ -34,13 +35,15 @@ impl App {
             display_controller: display_controller.unwrap(),
             game_state: GameState::new(),
             borders: Borders::new(dimensions)?,
+            output,
         })
     }
 
-    pub fn reset(&mut self) -> Result<(), DisplayControllerError> {
+    /// Reset method to be called at the start of each loop
+    fn reset(&mut self) -> Result<(), DisplayControllerError> {
         self.game_state.keyboard_event = None;
 
-        self.display_controller.display.reset();
+        self.display_controller.layout.reset();
 
         Ok(())
     }
@@ -54,7 +57,7 @@ impl App {
         ) -> Result<(), DisplayControllerError>,
     {
         self.game_state.start_game();
-        self.display_controller.start();
+        self.output.start();
 
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
@@ -65,7 +68,7 @@ impl App {
                         let event = read()?;
 
                         if event == Event::Key(KeyCode::Esc.into()) {
-                            DisplayController::close(&mut self.display_controller.target)?;
+                            self.output.close();
 
                             break;
                         }
@@ -73,20 +76,22 @@ impl App {
                         self.game_state.keyboard_event = Some(event);
                     }
 
-                    let drawable_controller: DrawableController = Default::default();
+                    // Creating a new instance of the drawable controller each loop, inefficient but simplifies development
+                    let mut drawable_controller: DrawableController = Default::default();
 
-                    // drawable_controller.add_drawable_entity(&self.borders);
+                    drawable_controller.add_drawable_entity(&self.borders);
 
                     frame_action(
                         &mut self.game_state,
                         &mut self.display_controller,
-                        // Creating a new instance of the drawable controller each loop, inefficient but simplifies development
-                        &mut Default::default(),
+                        &mut drawable_controller,
                     )?;
 
-                    self.display_controller
-                        .draw_drawable(&self.borders.drawable)?
-                        .print_display()?;
+                    self.output.print_display(&self.display_controller.layout)?;
+
+                    //     self.display_controller
+                    //         .draw_drawable(&self.borders.drawable)?
+                    //         .print_display()?;
                 }
 
                 Ok(())
@@ -103,7 +108,7 @@ impl App {
     }
 
     pub fn shut_down(&mut self) -> Result<(), DisplayControllerError> {
-        DisplayController::close(&mut self.display_controller.target)?;
+        self.output.close();
 
         Ok(())
     }

@@ -2,7 +2,6 @@ mod api;
 mod app;
 mod components;
 mod entities;
-mod game_state;
 mod systems;
 
 use crate::api::display::Point;
@@ -20,13 +19,13 @@ fn main() {
 
     let mut app = App::new(dimensions).unwrap();
 
-    app.run(|game_state, display_controller, drawable_controller| {
+    app.run(move |game_state, display_controller, drawable_controller| {
         if let Some(event) = &game_state.keyboard_event {
             player.handle_event(&event);
         }
 
         // Game logic
-        display_controller.draw_drawable(&player.drawable)?;
+        // drawable_controller.add_drawable_entity(&mut player);
 
         Ok(())
     })

@@ -4,8 +4,8 @@ use super::{
 };
 
 #[derive(Debug)]
-pub struct Map {
-    /// A Map is a 2D vector, where the Vec<_> are rows and Vec<Vec<_>> are columns
+pub struct Layout {
+    /// A Map is a 2D vector, where the Vec<_> are rows and Vec<Vec<_>> are items in a row
     pub map: Vec<Vec<Option<Element>>>,
     pub dimensions: Point,
     pub default_element: Option<Element>,
@@ -18,7 +18,7 @@ pub enum Direction {
     Horizontal,
 }
 
-impl Map {
+impl Layout {
     /// Creates a new map with None values for initialization
     ///
     /// # Arguments
@@ -61,11 +61,11 @@ impl Map {
             map[index] = parse_str_to_element_array(row);
         }
 
-        Map::from_map(map, None)
+        Layout::from_map(map, None)
     }
 
     pub fn reset(&mut self) -> &mut Self {
-        self.map = Map::new(&self.dimensions, self.default_element).map;
+        self.map = Layout::new(&self.dimensions, self.default_element).map;
 
         self
     }
@@ -174,28 +174,6 @@ impl Map {
         Ok(self)
     }
 
-    // pub fn draw_drawable(
-    //     &mut self,
-    //     drawable: &Drawable,
-    // ) -> Result<&mut Self, DisplayControllerError> {
-    //     let base_location = drawable.location + self.offset;
-    //     // Iterate over each row in the map
-    //     for (num_row, drawable_row) in drawable.map.map.iter().enumerate() {
-    //         // Then each column in the row
-    //         for num_column in 0..drawable_row.len() {
-    //             if let Some(has_element) = drawable_row[num_column] {
-    //                 let updated_position = base_location
-    //                     .add_width(num_column as u32)
-    //                     .add_height(num_row as u32);
-
-    //                 self.display.draw_item(has_element, &updated_position)?;
-    //             }
-    //         }
-    //     }
-
-    //     Ok(self)
-    // }
-
     // TODO: Add docs describing that the line draws from top->bottom
     pub fn draw_line(
         &mut self,
@@ -245,7 +223,7 @@ impl Map {
 
 #[cfg(test)]
 mod tests {
-    use crate::api::display::{Element, Map, Point};
+    use crate::api::display::{Element, Layout, Point};
 
     use super::Direction;
 
@@ -258,7 +236,7 @@ mod tests {
 
     #[test]
     fn it_creates_correct_dimensions() {
-        let map = Map::new(DIMENSIONS, None);
+        let map = Layout::new(DIMENSIONS, None);
 
         // Ensure the correct amount of rows
         assert_eq!(map.map.len(), HEIGHT as usize);
@@ -273,7 +251,7 @@ mod tests {
 
     #[test]
     fn it_draws_a_horizontal_line() {
-        let mut map = Map::new(DIMENSIONS, None);
+        let mut map = Layout::new(DIMENSIONS, None);
 
         map.draw_line(
             LINE_ELEMENT,
@@ -290,7 +268,7 @@ mod tests {
 
     #[test]
     fn it_draws_a_vertical_line() {
-        let mut map = Map::new(DIMENSIONS, None);
+        let mut map = Layout::new(DIMENSIONS, None);
 
         let column_number = 5;
 
@@ -312,7 +290,7 @@ mod tests {
 
     #[test]
     fn it_draws_a_rect() {
-        let mut map = Map::new(&Point::new(WIDTH, HEIGHT), None);
+        let mut map = Layout::new(&Point::new(WIDTH, HEIGHT), None);
 
         map.draw_rect(&Default::default(), DIMENSIONS, LINE_ELEMENT)
             .unwrap();

@@ -1,5 +1,5 @@
 use crate::{
-    api::display::DisplayController,
+    api::display::{DisplayController, DisplayControllerError},
     components::{Drawable, DrawableState},
 };
 
@@ -9,12 +9,6 @@ pub struct DrawableController<'drawable> {
 }
 
 impl<'drawable> DrawableController<'drawable> {
-    pub fn new() -> Self {
-        Self {
-            drawable_entities: vec![],
-        }
-    }
-
     pub fn update(&mut self) -> &mut Self {
         // Iterate over each entity and apply its velocity
         self
@@ -26,12 +20,17 @@ impl<'drawable> DrawableController<'drawable> {
         self
     }
 
-    pub fn draw_entities(&mut self, display_controller: &mut DisplayController) -> &mut Self {
+    pub fn draw_entities(
+        &mut self,
+        display_controller: &mut DisplayController,
+    ) -> Result<&mut Self, DisplayControllerError> {
         for entity in self.drawable_entities.iter() {
-            display_controller.draw_drawable(entity);
+            display_controller.draw_drawable(entity)?;
         }
 
-        self
+        // TODO: Collision detection goes here
+
+        Ok(self)
     }
 }
 

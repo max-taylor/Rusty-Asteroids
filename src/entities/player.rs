@@ -1,8 +1,8 @@
 use crossterm::event::KeyCode;
 
 use crate::{
-    api::display::{Map, Point},
-    components::{Drawable, DrawableState},
+    api::display::{Layout, Point},
+    components::{Drawable, DrawableState, Velocity},
 };
 
 use super::{consts::SPACE_SHIP, controller::create_event, Controller};
@@ -11,6 +11,8 @@ pub struct Player {
     pub drawable: DrawableState,
 }
 
+const MAX_VELOCITY: i32 = 1;
+
 impl Player {
     pub fn new() -> Self {
         let location = Point {
@@ -18,14 +20,10 @@ impl Player {
             height: 5,
         };
 
-        let map = Map::from_ascii(SPACE_SHIP);
+        let map = Layout::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: DrawableState {
-                map,
-                location,
-                velocity: 1,
-            },
+            drawable: DrawableState::new(map, location),
         }
     }
 }
@@ -37,27 +35,26 @@ impl Drawable for Player {
 }
 
 impl Controller for Player {
-    // TODO: Collision detection for the boundaries here
     fn up(&mut self) -> &mut Self {
-        self.drawable.location.height -= self.drawable.velocity;
+        self.drawable.velocity = Velocity::new(0, -MAX_VELOCITY);
 
         self
     }
 
     fn down(&mut self) -> &mut Self {
-        self.drawable.location.height += self.drawable.velocity;
+        self.drawable.velocity = Velocity::new(0, MAX_VELOCITY);
 
         self
     }
 
     fn left(&mut self) -> &mut Self {
-        self.drawable.location.width -= self.drawable.velocity;
+        self.drawable.velocity = Velocity::new(-MAX_VELOCITY, 0);
 
         self
     }
 
     fn right(&mut self) -> &mut Self {
-        self.drawable.location.width += self.drawable.velocity;
+        self.drawable.velocity = Velocity::new(MAX_VELOCITY, 0);
 
         self
     }
