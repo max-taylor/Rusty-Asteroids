@@ -9,7 +9,7 @@ pub struct Borders {
 }
 
 impl Borders {
-    pub fn new(dimensions: &Point<u32>) -> Result<Self, DisplayControllerError> {
+    pub fn new(dimensions: &Point<i64>) -> Result<Self, DisplayControllerError> {
         let mut drawable = DrawableState {
             layout: Layout::new(dimensions, None),
             location: Point::default(),
@@ -32,7 +32,7 @@ impl Drawable for Borders {
         &self.drawable
     }
 
-    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
+    fn set_position(&mut self, updated_position: Point<i64>) -> &mut Self {
         self.drawable.location = updated_position;
 
         self

@@ -6,7 +6,7 @@ use super::Point;
 use super::{display_controller_error::DisplayControllerError, Layout};
 
 pub struct DisplayController {
-    offset: Point<u32>,
+    offset: Point<i64>,
     // entities: Vec<&Point>,
     pub layout: Layout,
 }
@@ -23,14 +23,14 @@ impl DisplayController {
     /// * `dimensions` - The controllable area
     ///
     /// ```
-    pub fn new(dimensions: &Point<u32>) -> Result<Self, DisplayControllerError> {
+    pub fn new(dimensions: &Point<i64>) -> Result<Self, DisplayControllerError> {
         let (rows, columns) = size().unwrap();
 
         if dimensions.height > columns.into() || dimensions.width > rows.into() {
             return Err(DisplayControllerError::DisplayTooSmallForDimensions);
         }
         // Display is the size of the screen
-        let screen_size = Point::new(rows as u32, columns as u32);
+        let screen_size = Point::new(rows as i64, columns as i64);
 
         let offset = (screen_size - *dimensions) / Point::new(2, 2);
 
@@ -53,8 +53,8 @@ impl DisplayController {
             for num_column in 0..drawable_row.len() {
                 if let Some(has_element) = drawable_row[num_column] {
                     let updated_position = base_location
-                        .add_width(num_column as u32)
-                        .add_height(num_row as u32);
+                        .add_width(num_column as i64)
+                        .add_height(num_row as i64);
 
                     self.layout.draw_item(has_element, &updated_position)?;
                 }

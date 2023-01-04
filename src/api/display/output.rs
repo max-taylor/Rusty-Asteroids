@@ -59,7 +59,7 @@ impl Output {
     pub fn print_element(
         &mut self,
         element: &Element,
-        move_to: Option<&Point<u32>>,
+        move_to: Option<&Point<i64>>,
     ) -> Result<(), DisplayControllerError> {
         if let Some(move_to_destination) = move_to {
             queue!(

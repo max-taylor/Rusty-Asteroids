@@ -17,7 +17,7 @@ pub struct Asteroid {
 }
 
 impl Asteroid {
-    pub fn new(dimensions: &Point<u32>) -> Self {
+    pub fn new(dimensions: &Point<i64>) -> Self {
         let mut rng = rand::thread_rng();
 
         let location = Point {
@@ -39,7 +39,7 @@ impl Asteroid {
 }
 
 impl Drawable for Asteroid {
-    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
+    fn set_position(&mut self, updated_position: Point<i64>) -> &mut Self {
         self.drawable.location = updated_position;
 
         self

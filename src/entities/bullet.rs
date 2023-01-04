@@ -13,7 +13,7 @@ pub struct Bullet {
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
 impl Bullet {
-    pub fn new(location: Point<u32>) -> Self {
+    pub fn new(location: Point<i64>) -> Self {
         let asteroid: Vec<Vec<Option<Element>>> = [
             [None, Some(ARROW_ELEMENT), None],
             [None, Some(ARROW_ELEMENT), None],
@@ -40,7 +40,7 @@ impl Bullet {
 }
 
 impl Drawable for Bullet {
-    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
+    fn set_position(&mut self, updated_position: Point<i64>) -> &mut Self {
         self.drawable.location = updated_position;
 
         self

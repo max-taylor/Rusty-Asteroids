@@ -23,13 +23,13 @@ pub struct App {
     player: Player,
     // bullets: Vec<Bullet>,
     asteroids: Vec<Asteroid>,
-    dimensions: Point<u32>,
+    dimensions: Point<i64>,
 }
 
-const SPAWN_GAME_LOOPS: u32 = 5;
+const SPAWN_GAME_LOOPS: i64 = 5;
 
 impl App {
-    pub fn new(dimensions: &Point<u32>) -> Result<App, DisplayControllerError> {
+    pub fn new(dimensions: &Point<i64>) -> Result<App, DisplayControllerError> {
         dbg!(dimensions);
         let mut output = Output::new(stdout());
 

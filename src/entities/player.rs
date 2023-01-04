@@ -35,7 +35,7 @@ impl Drawable for Player {
         &self.drawable
     }
 
-    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
+    fn set_position(&mut self, updated_position: Point<i64>) -> &mut Self {
         self.drawable.location = updated_position;
 
         self

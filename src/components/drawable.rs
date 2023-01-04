@@ -3,7 +3,7 @@ use crate::api::display::{Layout, Point};
 #[derive(Debug)]
 pub struct DrawableState {
     pub layout: Layout,
-    pub location: Point<u32>,
+    pub location: Point<i64>,
     pub velocity: Point<i64>,
     pub drawable_type: DrawableType,
 }
@@ -14,13 +14,13 @@ pub enum DrawableType {
     Enemy,
     Border,
     // Damage of ammunition
-    Ammunition(u32),
+    Ammunition(i64),
 }
 
 impl DrawableState {
     pub fn new(
         layout: Layout,
-        location: Point<u32>,
+        location: Point<i64>,
         drawable_type: DrawableType,
         velocity: Option<Point<i64>>,
     ) -> Self {
@@ -34,7 +34,7 @@ impl DrawableState {
 }
 
 pub trait Drawable {
-    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self;
+    fn set_position(&mut self, updated_position: Point<i64>) -> &mut Self;
 
     fn get_drawable_state(&self) -> &DrawableState;
 

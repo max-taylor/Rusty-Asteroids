@@ -1,7 +1,5 @@
 use std::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
 
-use super::DisplayControllerError;
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Point<T> {
     pub width: T,
@@ -19,24 +17,6 @@ pub struct Point<T> {
 //         )
 //     }
 // }
-
-impl Into<Point<i64>> for Point<u32> {
-    fn into(self) -> Point<i64> {
-        Point {
-            height: self.height.into(),
-            width: self.width.into(),
-        }
-    }
-}
-
-impl Into<Point<u32>> for Point<i64> {
-    fn into(self) -> Point<u32> {
-        Point {
-            height: self.height.try_into().unwrap(),
-            width: self.width.try_into().unwrap(),
-        }
-    }
-}
 
 impl<T> Default for Point<T>
 where
