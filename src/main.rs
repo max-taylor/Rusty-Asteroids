@@ -8,5 +8,5 @@ use crate::api::display::Point;
 use app::App;
 
 fn main() {
-    App::new(Point::new(100, 60)).unwrap()
+    App::new(Point::new(60, 40)).unwrap()
 }

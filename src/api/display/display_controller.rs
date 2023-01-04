@@ -56,7 +56,7 @@ impl DisplayController {
             offset: (screen_size - *dimensions) / Point::new(2, 2),
         };
 
-        controller.setup().print_display(false)?.flush();
+        controller.setup().print_display()?.flush();
 
         Ok(controller)
     }
@@ -111,23 +111,11 @@ impl DisplayController {
         Ok(self)
     }
 
-    pub fn print_display(
-        &mut self,
-        reset_display: bool,
-    ) -> Result<&mut Self, DisplayControllerError> {
+    pub fn print_display(&mut self) -> Result<&mut Self, DisplayControllerError> {
         self.reset_cursor();
 
         for row in self.display.map.iter() {
             for element in row.iter() {
-                if reset_display {
-                    DisplayController::print_element(
-                        &mut self.target,
-                        &&self.default_element,
-                        None,
-                    )?;
-
-                    continue;
-                }
                 match element {
                     Some(element) => {
                         DisplayController::print_element(&mut self.target, element, None)?;

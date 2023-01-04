@@ -69,7 +69,7 @@ impl App {
                 .draw_drawable(&self.player.drawable)
                 .unwrap();
 
-            self.display_controller.print_display(false).unwrap();
+            self.display_controller.print_display().unwrap();
 
             // TODO: Could try and simulate a framerate, as in don't return responses immediately return them on an interval
         }

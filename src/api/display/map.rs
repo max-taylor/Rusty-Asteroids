@@ -1,4 +1,9 @@
-use super::{element::Element, DisplayControllerError, Point};
+use crossterm::style::Color;
+
+use super::{
+    element::{parse_str_to_element_array, Element},
+    DisplayControllerError, Point,
+};
 
 #[derive(Debug)]
 pub struct Map {
@@ -43,9 +48,22 @@ impl Map {
         }
     }
 
-    // pub fn from_ascii(ascii: &str) -> Self {
+    pub fn from_ascii(ascii: &str) -> Self {
+        let rows = ascii.split("\n");
 
-    // }
+        let width = rows.into_iter().max_by_key(|row| row.len()).unwrap().len();
+
+        let audit_element = Element::new(' ', Color::Cyan, Color::Cyan);
+
+        let mut map: Vec<Vec<Option<Element>>> =
+            vec![vec![Some(audit_element); width as usize]; ascii.split("\n").count()];
+
+        // for (index, row) in ascii.split("\n").enumerate() {
+        //     map[index] = parse_str_to_element_array(row);
+        // }
+
+        Map::from_map(map, None)
+    }
 
     pub fn reset(&mut self) -> &mut Self {
         self.map = Map::new(&self.dimensions, self.default_element).map;
