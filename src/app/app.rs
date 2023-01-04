@@ -6,6 +6,8 @@ use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
     components::Drawable,
     entities::{Asteroid, Borders, Bullet, Controller, Player},
+    helpers::get_now,
+    systems::AsteroidController,
 };
 
 use super::game_state::GameState;
@@ -16,7 +18,7 @@ pub struct App {
     game_state: GameState,
     borders: Borders,
     player: Player,
-    asteroids: Vec<Asteroid>,
+    asteroid_controller: AsteroidController,
     dimensions: Point<i64>,
 }
 
@@ -44,7 +46,7 @@ impl App {
             borders: Borders::new(&dimensions)?,
             output,
             player: Player::new(),
-            asteroids: Default::default(),
+            asteroid_controller: AsteroidController::new(1000, dimensions),
             dimensions,
         })
     }
@@ -68,6 +70,7 @@ impl App {
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
                 while self.game_state.is_running() {
+                    // let game_loop_start = get_now();
                     self.reset()?;
 
                     if poll(Duration::from_millis(100))? {
@@ -81,22 +84,17 @@ impl App {
 
                         self.game_state.keyboard_event = Some(event);
                     }
-
-                    if spawn_in_loops == 0 {
-                        self.asteroids.push(Asteroid::new(&self.dimensions));
-
-                        spawn_in_loops = SPAWN_GAME_LOOPS;
-                    }
-
                     if let Some(event) = &self.game_state.keyboard_event {
                         self.player.handle_event(&event);
                     }
 
+                    // let game_loop_duration = get_now() - game_loop_start;
+                    // self.asteroid_controller
+                    // .handle_game_loop(game_loop_duration);
+
                     self.update_positions().draw_all_entities()?;
 
                     self.output.print_display(&self.display_controller.layout)?;
-
-                    spawn_in_loops -= 1;
                 }
                 Ok(())
             },
@@ -114,9 +112,12 @@ impl App {
             bullet.update_position(None);
         });
 
-        self.asteroids.iter_mut().for_each(|asteroid| {
-            asteroid.update_position(None);
-        });
+        // self.asteroid_controller
+        //     .asteroids
+        //     .iter_mut()
+        //     .for_each(|asteroid| {
+        //         asteroid.update_position(None);
+        //     });
 
         self
     }
@@ -147,7 +148,10 @@ impl App {
             &mut self.player.bullets.entities,
         );
 
-        App::draw_vec(&mut self.display_controller, &mut self.asteroids);
+        // App::draw_vec(
+        //     &mut self.display_controller,
+        //     &mut self.asteroid_controller.asteroids,
+        // );
 
         Ok(self)
     }

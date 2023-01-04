@@ -12,8 +12,8 @@ pub struct Player {
     pub bullets: Spawnable<Bullet>,
 }
 
-const WIDTH_MAX_VELOCITY: i64 = 2;
-const HEIGHT_MAX_VELOCITY: i64 = 1;
+const WIDTH_MAX_VELOCITY: i64 = 4;
+const HEIGHT_MAX_VELOCITY: i64 = 2;
 
 trait CanSpawn {
     fn get_spawnable_entities<T>(&self) -> Spawnable<T>;
@@ -34,16 +34,11 @@ impl Player {
         }
     }
 
+    // TODO: Implement different bullet types
     // pub fn get_spawnable_entities(&self) -> Spawnable<Bullet> {
     // self.bullets
     // }
 }
-
-// impl CanSpawn for Player {
-// fn get_spawnable_entities<Bullet>(&self) -> Spawnable<Bullet> {
-// self.bullets
-// }
-// }
 
 impl Drawable for Player {
     fn get_drawable_state(&self) -> &DrawableState {

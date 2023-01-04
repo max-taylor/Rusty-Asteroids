@@ -34,7 +34,12 @@ impl Bullet {
         };
 
         Self {
-            drawable: DrawableState::new(map, location, DrawableType::Enemy, Some(velocity)),
+            drawable: DrawableState::new(
+                map,
+                location,
+                DrawableType::Ammunition(1),
+                Some(velocity),
+            ),
         }
     }
 }

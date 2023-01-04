@@ -14,17 +14,11 @@ const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOR
 
 pub struct Asteroid {
     pub drawable: DrawableState,
+    pub health: u32,
 }
 
 impl Asteroid {
-    pub fn new(dimensions: &Point<i64>) -> Self {
-        let mut rng = rand::thread_rng();
-
-        let location = Point {
-            height: 0,
-            width: rng.gen_range(0..dimensions.width),
-        };
-
+    pub fn new(location: Point<i64>) -> Self {
         let map = Layout::from_ascii(ASTEROID);
 
         let velocity: Point<i64> = Point {
@@ -34,6 +28,7 @@ impl Asteroid {
 
         Self {
             drawable: DrawableState::new(map, location, DrawableType::Enemy, Some(velocity)),
+            health: 1,
         }
     }
 }

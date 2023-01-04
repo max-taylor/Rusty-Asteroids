@@ -33,6 +33,8 @@ impl DrawableState {
     }
 }
 
+const PADDING_OFFSET: i64 = 1;
+
 pub trait Drawable {
     fn set_position(&mut self, updated_position: Point<i64>) -> &mut Self;
 
@@ -51,20 +53,20 @@ pub trait Drawable {
                 panic!("Missing required dimensions for rendering player");
             }
 
-            if updated_position.height < 0 {
-                updated_position.height = 0;
+            if updated_position.height < PADDING_OFFSET {
+                updated_position.height = PADDING_OFFSET;
             }
 
-            if updated_position.width < 0 {
-                updated_position.width = 0;
+            if updated_position.width < PADDING_OFFSET {
+                updated_position.width = PADDING_OFFSET;
             }
 
             let dimensions = dimensions.unwrap();
 
             let drawable_dimensions = drawable_state.layout.dimensions;
 
-            let max_height = dimensions.height - drawable_dimensions.height;
-            let max_width = dimensions.width - drawable_dimensions.width;
+            let max_height = dimensions.height - drawable_dimensions.height - PADDING_OFFSET;
+            let max_width = dimensions.width - drawable_dimensions.width - PADDING_OFFSET;
 
             if updated_position.height > max_height {
                 updated_position.height = max_height;
