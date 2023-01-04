@@ -45,19 +45,17 @@ impl DisplayController {
         // Display is the size of the screen
         let screen_size = Point::new(rows as u32, columns as u32);
 
-        let mut controller = DisplayController {
+        Ok(DisplayController {
             display: Map::new(&screen_size, None),
             target: stdout(),
             // The offset is where all drawing will be done, this is the center of the terminal screen
             offset: (screen_size - *dimensions) / Point::new(2, 2),
-        };
+        })
 
-        controller.setup().print_display()?.flush();
-
-        Ok(controller)
+        // controller.setup().print_display()?.flush();
     }
 
-    fn setup(&mut self) -> &mut Self {
+    pub fn start(&mut self) -> &mut Self {
         queue!(self.target, EnterAlternateScreen, Hide).unwrap();
 
         self

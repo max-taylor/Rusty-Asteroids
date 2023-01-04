@@ -1,27 +1,22 @@
-use std::{io::stdout, time::Duration};
+use std::{io::stdout, panic, time::Duration};
 
 use crossterm::{
     event::{poll, read, Event, KeyCode},
-    terminal::{enable_raw_mode, size},
+    terminal::enable_raw_mode,
 };
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Map, Point},
-    entities::{Borders, Controller, Player},
+    game_state::GameState,
 };
 
 pub struct App {
-    player: Player,
     display_controller: DisplayController,
-    borders: Borders,
-}
-
-pub struct LoopState {
-    keyboard_event: Option<Event>,
+    game_state: GameState,
 }
 
 impl App {
-    pub fn new(dimensions: Point) -> Result<(), DisplayControllerError> {
+    pub fn new(dimensions: Point) -> Result<App, DisplayControllerError> {
         enable_raw_mode().map_err(DisplayControllerError::from_crossterm_error)?;
 
         let display_controller = DisplayController::new(&dimensions);
@@ -32,60 +27,68 @@ impl App {
             return Err(error.clone());
         }
 
-        let mut app = App {
-            player: Player::new(),
-            display_controller: display_controller.unwrap(), // position_controller,
-            borders: Borders::new(&dimensions)?,
-        };
+        Ok(App {
+            display_controller: display_controller.unwrap(),
+            game_state: GameState::new(),
+        })
+    }
 
-        if let Err(err) = app.setup_listeners() {
-            DisplayController::close(&mut stdout())?;
+    pub fn reset(&mut self) -> Result<(), DisplayControllerError> {
+        self.game_state.keyboard_event = None;
 
-            return Err(err);
-        }
+        self.display_controller.display.reset();
 
         Ok(())
     }
 
-    // pub fn run<F>(&mut self, mut frame_action: F)
-    // where
-    //     F: FnMut(&mut LoopState, &mut Map),
-    // {
-    //     self.display_controller.display.reset();
+    pub fn run<F>(&mut self, mut frame_action: F) -> Result<(), DisplayControllerError>
+    where
+        F: FnMut(&mut GameState, &mut Map),
+    {
+        self.game_state.start_game();
+        self.display_controller.start();
 
-    //     while
+        let result = panic::catch_unwind(panic::AssertUnwindSafe(
+            || -> Result<(), DisplayControllerError> {
+                while self.game_state.is_running() {
+                    self.reset()?;
 
-    //     frame_action();
-    // }
+                    if poll(Duration::from_millis(100))? {
+                        let event = read()?;
 
-    fn setup_listeners(&mut self) -> Result<(), DisplayControllerError> {
-        loop {
-            // TODO: A high-order function that acts a game loop and does the resetting and other house keeping would be ideal
-            self.display_controller.display.reset();
+                        if event == Event::Key(KeyCode::Esc.into()) {
+                            DisplayController::close(&mut self.display_controller.target)?;
 
-            if poll(Duration::from_millis(100))? {
-                let event = read()?;
+                            break;
+                        }
 
-                if event == Event::Key(KeyCode::Esc.into()) {
-                    DisplayController::close(&mut self.display_controller.target)?;
+                        self.game_state.keyboard_event = Some(event);
+                    }
 
-                    break;
+                    frame_action(&mut self.game_state, &mut self.display_controller.display);
+
+                    self.display_controller.print_display()?;
+
+                    // TODO: Handle collison detections with the updated map that is returned
+
+                    // frame_action();
                 }
 
-                self.player.handle_event(&event);
-            }
+                Ok(())
+            },
+        ));
 
-            self.display_controller
-                .draw_drawable(&self.borders.drawable)?;
+        //   if let Err(_) = result {
+        //     DisplayController::close(&mut self.display_controller.target)?;
+        // }
 
-            self.display_controller
-                .draw_drawable(&self.player.drawable)?;
-            // TODO: Add collision detection after updates
+        self.shut_down()?;
 
-            self.display_controller.print_display()?;
+        Ok(())
+    }
 
-            // TODO: Could try and simulate a framerate, as in don't return responses immediately return them on an interval
-        }
+    pub fn shut_down(&mut self) -> Result<(), DisplayControllerError> {
+        DisplayController::close(&mut self.display_controller.target)?;
 
         Ok(())
     }
