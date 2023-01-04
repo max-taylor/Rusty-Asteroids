@@ -1,31 +1,26 @@
 use crate::{
-    api::display::{Map, Point},
-    systems::position::Position,
+    api::display::{DisplayControllerError, Element, Map, Point},
+    components::Drawable,
 };
 
-use super::Entity;
-
-pub struct Borders<'dimensions> {
-    dimensions: &'dimensions Point,
-    position: Position,
+#[derive(Debug)]
+pub struct Borders {
+    pub drawable: Drawable,
 }
 
-impl<'dimensions> Borders<'dimensions> {
-    pub fn new(dimensions: &'dimensions Point) -> Self {
-        let map = Map::new(dimensions, None);
-        // TODO modify map for actual borders
+impl Borders {
+    pub fn new(dimensions: &Point) -> Result<Self, DisplayControllerError> {
+        let mut drawable = Drawable {
+            map: Map::new(dimensions, None),
+            location: Point::default(),
+        };
 
-        let position = Position::new(map, Point::home_point(), 0);
-
-        Self {
+        drawable.map.draw_rect(
+            &Default::default(),
             dimensions,
-            position,
-        }
-    }
-}
+            Element::new_default_colors('x'),
+        )?;
 
-impl<'dimensions> Entity for Borders<'dimensions> {
-    fn get_entity_position(&self) -> &Position {
-        &self.position
+        Ok(Self { drawable })
     }
 }

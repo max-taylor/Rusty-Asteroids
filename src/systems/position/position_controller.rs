@@ -2,17 +2,17 @@ use crate::api::display::DisplayController;
 
 use super::Position;
 
-pub struct PositionController<'dimensions, 'display_controller> {
+pub struct PositionController<'display_controller> {
     /// Positions represent distinct characters, items, etc.
     positions: Vec<Position>,
     /// This will interface with the display controller to simplify drawing
-    display_controller: &'display_controller mut DisplayController<'dimensions>,
+    display_controller: &'display_controller mut DisplayController,
 }
 
-impl<'dimensions, 'display_controller> PositionController<'dimensions, 'display_controller> {
+impl<'display_controller> PositionController<'display_controller> {
     pub fn new(
         positions: Vec<Position>,
-        display_controller: &'display_controller mut DisplayController<'dimensions>,
+        display_controller: &'display_controller mut DisplayController,
     ) -> Self {
         Self {
             positions,

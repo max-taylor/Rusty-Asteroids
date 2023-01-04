@@ -1,52 +1,131 @@
-use crossterm::event::{Event, KeyCode};
+use std::sync::Arc;
 
 use crate::{
-    api::display::{Element, Map, Point},
+    api::display::{
+        element::{parse_str_to_element_array, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
+        Element, Map, Point,
+    },
     components::Drawable,
 };
 
-use super::controller::Controller;
+use super::Controller;
 
 pub struct Player {
-    drawable: Drawable,
+    pub drawable: Drawable,
+    pub move_speed: u32,
+}
+
+const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
+
+const SPACE_SHIP: &str = "       _________
+      (=========)
+      |=========|
+      |====_====|
+      |== / \\ ==|
+      |= / _ \\/ =|
+   _  |=| ( ) |=|
+  /=\\ |=|     |=| /=\
+  |=| |=| USA |=| |=|
+  |=| |=|  _  |=| |=|
+  |=| |=| | | |=| |=|
+  |=| |=| | | |=| |=|
+  |=| |=| | | |=| |=|
+  |=| |/  | |  \\| |=|
+  |=|/    | |    \\|=|
+  |=/NASA |_| NASA\\=|
+  |(_______________)|
+  |=| |_|__|__|_| |=|
+  |=|   ( ) ( )   |=|
+ /===\\           /===\
+|||||||         |||||||
+-------         -------
+ (~~~)           (~~~)
+";
+
+fn parse_ascii_to_map(ascii: &str) -> Map {
+    let rows = ascii.split("\n");
+
+    let width = rows.into_iter().max_by_key(|row| row.len()).unwrap().len();
+
+    let mut map: Vec<Vec<Option<Element>>> =
+        vec![vec![None; ascii.split("\n").count() as usize]; width];
+
+    for (index, row) in ascii.split("\n").enumerate() {
+        map[index] = parse_str_to_element_array(row);
+    }
+
+    Map::from_map(map, None)
+
+    // let vec = Map::new(
+    //     &Point {
+    //         width: width as u32,
+    //         height: rows. as u32,
+    //     },
+    //     None,
+    // );
+
+    // for row in rows {
+
+    // }
 }
 
 impl Player {
-    pub fn new() -> Self {
+    pub const ascii: &str = "
+       ^ 
+      ^^^
+    ";
+
+    pub fn new(dimensions: &Point) -> Self {
+        let location = *dimensions
+            / Point {
+                width: 2,
+                height: 2,
+            };
+
+        let map = parse_ascii_to_map(SPACE_SHIP);
+
+        // let spaceship: Vec<Vec<Option<Element>>> = [
+        //     [None, Some(ARROW_ELEMENT), None],
+        //     [
+        //         Some(ARROW_ELEMENT),
+        //         Some(ARROW_ELEMENT),
+        //         Some(ARROW_ELEMENT),
+        //     ],
+        // ]
+        // .map(|row| row.to_vec())
+        // .to_vec();
+
+        // let map = Map::from_map(spaceship, None);
+
         Self {
-            drawable: Drawable {
-                map: Map::new(
-                    &Point { x: 1, y: 1 },
-                    Some(Element::new_default_colors('😃')),
-                ),
-                location: Point { x: 0, y: 0 },
-            },
+            drawable: Drawable { map, location },
+            move_speed: 1,
         }
     }
 }
 
-// impl Controller for Player {
-//     fn up(&mut self) -> &mut Self {
-//         todo!()
-//     }
+impl Controller for Player {
+    fn up(&mut self) -> &mut Self {
+        self.drawable.location.height -= self.move_speed;
 
-//     fn down(&mut self) -> &mut Self {
-//         todo!()
-//     }
+        self
+    }
 
-//     fn left(&mut self) -> &mut Self {
-//         todo!()
-//     }
+    fn down(&mut self) -> &mut Self {
+        self.drawable.location.height += self.move_speed;
 
-//     fn right(&mut self) -> &mut Self {
-//         todo!()
-//     }
+        self
+    }
 
-//     fn handle_event(&mut self, event: crossterm::event::Event) -> &mut Self {
-//         if event == Event::Key(KeyCode::Up.into()) {
-//             return self.up();
-//         }
+    fn left(&mut self) -> &mut Self {
+        self.drawable.location.width -= self.move_speed;
 
-//         self
-//     }
-// }
+        self
+    }
+
+    fn right(&mut self) -> &mut Self {
+        self.drawable.location.width += self.move_speed;
+
+        self
+    }
+}

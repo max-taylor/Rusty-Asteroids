@@ -1,4 +1,4 @@
-use std::io::{self, stdout, ErrorKind, Write};
+use std::io::{self, stdout, Write};
 
 use crossterm::{
     cursor::{Hide, MoveTo, Show},
@@ -16,8 +16,7 @@ use super::{
     Point,
 };
 
-pub struct DisplayController<'dimensions> {
-    dimensions: &'dimensions Point,
+pub struct DisplayController {
     offset: Point,
     // entities: Vec<&Point>,
     screen_size: Point,
@@ -26,19 +25,11 @@ pub struct DisplayController<'dimensions> {
     pub target: io::Stdout,
 }
 
-pub enum Direction {
-    Vertical,
-    Horizontal,
-}
-
-const BORDER_ELEMENT: Element = Element::new('x', Color::Blue, Color::Blue);
-const PADDING: Point = Point::new(10, 10);
-
 type DisplayControllerResult<T> = Result<T, DisplayControllerError>;
 
 // TODO -> This x/y business is annoying, change to rows/columns or make it clearer
 
-impl<'dimensions> DisplayController<'dimensions> {
+impl DisplayController {
     /// Creates a new display controller, a display controller fills the entire screen but the provided dimensions will be the controllable area
     ///
     /// # Arguments
@@ -46,37 +37,28 @@ impl<'dimensions> DisplayController<'dimensions> {
     /// * `dimensions` - The controllable area
     ///
     /// ```
-    pub fn new(dimensions: &'dimensions Point) -> Result<Self, DisplayControllerError> {
-        let (columns, rows) = size().unwrap();
+    pub fn new(dimensions: &Point) -> Result<Self, DisplayControllerError> {
+        let (rows, columns) = size().unwrap();
 
-        if dimensions.x > rows.into() || dimensions.y > columns.into() {
+        if dimensions.height > columns.into() || dimensions.width > rows.into() {
             return Err(DisplayControllerError::DisplayTooSmallForDimensions);
         }
 
         // Display is the size of the screen
-        let screen_size = Point::new(columns as u32, rows as u32);
+        let screen_size = Point::new(rows as u32, columns as u32);
 
         let mut controller = DisplayController {
             display: Map::new(&screen_size, None),
             target: stdout(),
-            dimensions: &dimensions,
             default_element: Element::default(),
             screen_size,
             // The offset is where all drawing will be done, this is the center of the terminal screen
             offset: (screen_size - *dimensions) / Point::new(2, 2),
         };
 
-        controller.setup().draw_borders()?.print_display()?.flush();
+        controller.setup().print_display(false)?.flush();
 
         Ok(controller)
-    }
-
-    fn draw_borders(&mut self) -> Result<&mut Self, DisplayControllerError> {
-        self.draw_rect(
-            &Point::new(0, 0),
-            self.dimensions,
-            Element::new('x', Color::Blue, Color::Blue),
-        )
     }
 
     fn setup(&mut self) -> &mut Self {
@@ -85,13 +67,15 @@ impl<'dimensions> DisplayController<'dimensions> {
         self
     }
 
-    fn add_entity(&mut self, entity: &Point) -> &mut Self {
-        self
-    }
-
     /// Flushing the target publishes all queued writes
     fn flush(&mut self) -> &mut Self {
         self.target.flush().unwrap();
+
+        self
+    }
+
+    pub fn reset_display(&mut self) -> &mut Self {
+        self.display.reset();
 
         self
     }
@@ -108,105 +92,42 @@ impl<'dimensions> DisplayController<'dimensions> {
         self
     }
 
-    fn draw_rect(
-        &mut self,
-        start_position: &Point,
-        dimensions: &Point,
-        element: Element,
-    ) -> Result<&mut Self, DisplayControllerError> {
-        self.draw_line(element, dimensions.x, start_position, Direction::Horizontal)?
-            .draw_line(
-                element,
-                dimensions.x,
-                &start_position.addY(dimensions.y - 1),
-                Direction::Horizontal,
-            )?
-            .draw_line(element, dimensions.y, start_position, Direction::Vertical)?
-            .draw_line(
-                element,
-                dimensions.y,
-                &start_position.addX(dimensions.x - 1),
-                Direction::Vertical,
-            )?;
+    pub fn draw_drawable(&mut self, drawable: &Drawable) -> DisplayControllerResult<&mut Self> {
+        let base_location = drawable.location + self.offset;
+        // Iterate over each row in the map
+        for (num_row, drawable_row) in drawable.map.map.iter().enumerate() {
+            // Then each column in the row
+            for num_column in 0..drawable_row.len() {
+                if let Some(has_element) = drawable_row[num_column] {
+                    let updated_position = base_location
+                        .add_width(num_column as u32)
+                        .add_height(num_row as u32);
 
-        Ok(self)
-    }
-
-    // TODO: Add docs describing that the line draws from top->bottom
-    pub fn draw_line(
-        &mut self,
-        element: Element,
-        len: u32,
-        start_position: &Point,
-        direction: Direction,
-    ) -> Result<&mut Self, DisplayControllerError> {
-        for position_change in 0..len {
-            let new_position = match direction {
-                Direction::Horizontal => start_position.addX(position_change),
-                Direction::Vertical => start_position.addY(position_change),
-            };
-
-            self.draw_item(element, &new_position)?;
-        }
-
-        Ok(self)
-    }
-
-    fn draw_item(
-        &mut self,
-        element: Element,
-        position: &Point,
-    ) -> Result<&mut Self, DisplayControllerError> {
-        // Position is exclusive of the dimension borders
-        if position.x >= self.dimensions.x || position.y >= self.dimensions.y {
-            return Err(DisplayControllerError::PositionOutOfRange);
-        }
-
-        let updated_positions = self.offset + *position;
-
-        let existing_element = self.display.get_element_mut(&updated_positions)?;
-        // let row = self
-        //     .display
-        //     .map
-        //     .get_mut(updated_positions.y as usize)
-        //     .ok_or(DisplayControllerError::PositionOutOfRange)?;
-
-        *existing_element = Some(element);
-
-        // This could instead just have the .insert chained on the above expression to replace the item, but this is a bit more verbose for my learning
-        // if let Some(existing_item) = existing_element {
-        //     *existing_item = element;
-        // } else {
-        //     *existing_element = Some(element);
-        // }
-
-        Ok(self)
-    }
-
-    fn draw_drawable(&mut self, drawable: &Drawable) -> DisplayControllerResult<&mut Self> {
-        for drawable_row in drawable.map.map.iter() {
-            for element in drawable_row.iter() {
-                if let Some(has_element) = element {
-                    // self.draw_item(has_element, position)
+                    self.display.draw_item(has_element, &updated_position)?;
                 }
             }
-            // let display_row = self.display.get_row_mut(drawable.location.y)?;
-
-            // let row = self
-            //     .display
-            //     .map
-            //     .get_mut(drawable.location.x as usize)
-            //     .ok_or(DisplayControllerError::PositionOutOfRange);
         }
 
         Ok(self)
     }
 
-    pub fn print_display(&mut self) -> Result<&mut Self, DisplayControllerError> {
+    pub fn print_display(
+        &mut self,
+        reset_display: bool,
+    ) -> Result<&mut Self, DisplayControllerError> {
         self.reset_cursor();
 
         for row in self.display.map.iter() {
             for element in row.iter() {
+                if reset_display {
+                    DisplayController::print_element(
+                        &mut self.target,
+                        &&self.default_element,
+                        None,
+                    )?;
+
+                    continue;
+                }
                 match element {
                     Some(element) => {
                         DisplayController::print_element(&mut self.target, element, None)?;
@@ -233,7 +154,10 @@ impl<'dimensions> DisplayController<'dimensions> {
         if let Some(move_to_destination) = move_to {
             queue!(
                 target,
-                MoveTo(move_to_destination.x as u16, move_to_destination.y as u16)
+                MoveTo(
+                    move_to_destination.width as u16,
+                    move_to_destination.height as u16
+                )
             )
             .map_err(DisplayControllerError::from_crossterm_error)?;
         };
