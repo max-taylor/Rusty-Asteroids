@@ -1,42 +1,28 @@
-use std::{
-    error::Error,
-    io::{self, stdout},
-    thread::{self, Scope},
-};
-
 use crossterm::{
-    cursor::{Hide, Show},
     event::{read, Event, KeyCode},
-    execute,
-    style::{Color, Print, SetBackgroundColor, SetForegroundColor},
-    terminal::{
-        disable_raw_mode, enable_raw_mode, size, EnterAlternateScreen, LeaveAlternateScreen,
-    },
+    terminal::enable_raw_mode,
     Result,
 };
 
-use crate::display::DisplayController;
+use crate::{
+    display::{DisplayController, Point},
+    entities::{Controller, Player},
+};
 
-pub struct App<'target> {
+pub struct App {
     display_controller: DisplayController,
-    target: &'target mut io::Stdout,
+    player: Player,
 }
 
-impl<'target> App<'target> {
-    pub fn new(target: &'target mut io::Stdout) -> Result<()> {
+impl App {
+    pub fn new(dimensions: Point) -> Result<()> {
         enable_raw_mode()?;
 
-        let display_controller = DisplayController::new(50, 50);
-
         let mut app = App {
-            target,
-            display_controller,
+            display_controller: DisplayController::new(dimensions),
+            player: Player::new(),
         };
 
-        let size = size();
-        dbg!(size);
-
-        app.setup()?;
         app.setup_listeners();
 
         Ok(())
@@ -47,27 +33,14 @@ impl<'target> App<'target> {
             let event = read().unwrap();
 
             if event == Event::Key(KeyCode::Esc.into()) {
-                self.close();
+                self.display_controller.close();
 
                 break;
             }
+
+            self.player.handle_event(event);
+
+            // TODO: Could try and simulate a framerate, as in don't return responses immediately return them on an interval
         }
-    }
-
-    fn setup(&mut self) -> Result<()> {
-        execute!(
-            self.target,
-            EnterAlternateScreen,
-            Hide,
-            SetBackgroundColor(Color::Red),
-            SetForegroundColor(Color::Red),
-        )?;
-
-        Ok(())
-    }
-
-    fn close(&mut self) {
-        disable_raw_mode().unwrap();
-        execute!(self.target, LeaveAlternateScreen, Show).unwrap();
     }
 }

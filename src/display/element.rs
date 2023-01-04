@@ -1,5 +1,9 @@
 use crossterm::style::Color;
 
+pub const DEFAULT_BACKGROUND: Color = Color::White;
+pub const DEFAULT_FOREGROUND: Color = Color::White;
+
+#[derive(Clone, Copy)]
 pub struct Element {
     pub value: char,
     pub background: Color,
@@ -10,8 +14,8 @@ impl Element {
     pub fn new() -> Self {
         Self {
             value: ' ',
-            background: Color::Black,
-            foreground: Color::White,
+            background: DEFAULT_BACKGROUND,
+            foreground: DEFAULT_FOREGROUND,
         }
     }
 }

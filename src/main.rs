@@ -1,12 +1,11 @@
 mod app;
+mod components;
 mod display;
+mod entities;
 
 use app::App;
-
-use std::io::stdout;
+use display::Point;
 
 fn main() {
-    let mut stdout = stdout();
-
-    App::new(&mut stdout).unwrap()
+    App::new(Point::new(30, 30)).unwrap()
 }
