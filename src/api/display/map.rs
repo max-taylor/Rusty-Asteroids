@@ -4,6 +4,7 @@ use super::{element::Element, Point};
 
 pub struct Map<'dimensions> {
     pub dimensions: &'dimensions Point,
+    /// A Map is a 2D vector, where the Vec<_> is the rows and Vec<Vec<_>> are the columns
     pub map: Vec<Vec<Option<Element>>>,
 }
 

@@ -1,9 +1,9 @@
 use crossterm::style::Color;
 
-pub const DEFAULT_BACKGROUND: Color = Color::Blue;
-pub const DEFAULT_FOREGROUND: Color = Color::Blue;
+pub const DEFAULT_BACKGROUND: Color = Color::Red;
+pub const DEFAULT_FOREGROUND: Color = Color::Red;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Element {
     pub value: char,
     pub background: Color,

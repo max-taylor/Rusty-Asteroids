@@ -1,9 +1,17 @@
 use std::ops::{Add, Div, Mul, Sub};
 
+use crossterm::cursor::MoveTo;
+
 #[derive(Clone, Copy, PartialEq)]
 pub struct Point {
     pub x: u32,
     pub y: u32,
+}
+
+impl From<&Point> for MoveTo {
+    fn from(point: &Point) -> Self {
+        Self(point.x.try_into().unwrap(), point.y.try_into().unwrap())
+    }
 }
 
 impl Point {

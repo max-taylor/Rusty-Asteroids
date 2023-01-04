@@ -1,7 +1,9 @@
+use std::io::{stdout, Error, ErrorKind};
+
 use crossterm::{
     event::{read, Event, KeyCode},
     terminal::enable_raw_mode,
-    Result,
+    ErrorKind as CrosstermError,
 };
 
 use crate::{
@@ -16,15 +18,24 @@ pub struct App<'dimensions> {
 }
 
 impl<'dimensions> App<'dimensions> {
-    pub fn new(dimensions: Point) -> Result<()> {
+    pub fn new(dimensions: Point) -> Result<(), CrosstermError> {
         enable_raw_mode()?;
 
         let mut display_controller = DisplayController::new(&dimensions);
+
+        if let Some(error) = display_controller.as_ref().err() {
+            DisplayController::close(&mut stdout());
+
+            let cloned_error = error.clone();
+
+            return Err(Error::new(cloned_error.kind(), "Boot-up error"));
+        }
+
         // let position_controller = PositionController::new(vec![], &mut display_controller);
 
         let mut app = App {
             player: Player::new(),
-            display_controller, // position_controller,
+            display_controller: display_controller.unwrap(), // position_controller,
         };
 
         app.setup_listeners();
@@ -37,7 +48,7 @@ impl<'dimensions> App<'dimensions> {
             let event = read().unwrap();
 
             if event == Event::Key(KeyCode::Esc.into()) {
-                self.display_controller.close();
+                DisplayController::close(&mut self.display_controller.target);
 
                 break;
             }

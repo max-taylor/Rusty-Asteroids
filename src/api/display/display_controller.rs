@@ -1,11 +1,11 @@
-use std::convert::From;
-use std::io::{self, stdout, Write};
+use std::io::{self, stdout, ErrorKind, Write};
 
 use crossterm::{
-    cursor::{position, Hide, MoveTo, Show},
+    cursor::{Hide, MoveTo, Show},
     execute, queue,
     style::{Color, Print, SetBackgroundColor, SetForegroundColor},
     terminal::{disable_raw_mode, size, EnterAlternateScreen, LeaveAlternateScreen},
+    ErrorKind as CrosstermError,
 };
 
 use super::Map;
@@ -18,13 +18,7 @@ pub struct DisplayController<'dimensions> {
     dimensions: &'dimensions Point,
     display: Map<'dimensions>,
     default_element: Element,
-    target: io::Stdout,
-}
-
-impl From<&Point> for MoveTo {
-    fn from(point: &Point) -> Self {
-        Self(point.x.try_into().unwrap(), point.y.try_into().unwrap())
-    }
+    pub target: io::Stdout,
 }
 
 pub enum Direction {
@@ -35,6 +29,10 @@ pub enum Direction {
 const BORDER_ELEMENT: Element = Element::new('x', Color::Black, Color::Black);
 const PADDING: Point = Point::new(10, 10);
 
+// pub enum DisplayControllerError {
+//     IndexOutOfRange,
+// }
+
 impl<'dimensions> DisplayController<'dimensions> {
     /// Creates a new display controller, a display controller fills the entire screen but the provided dimensions will be the controllable area
     ///
@@ -43,12 +41,14 @@ impl<'dimensions> DisplayController<'dimensions> {
     /// * `dimensions` - The controllable area
     ///
     /// ```
-    pub fn new(dimensions: &'dimensions Point) -> Self {
+    pub fn new(dimensions: &'dimensions Point) -> Result<Self, CrosstermError> {
         let (columns, rows) = size().unwrap();
 
         if dimensions.x > rows.into() || dimensions.y > columns.into() {
             panic!("Invalid dimensions");
         }
+
+        // let tmp_dimensions = Point::new(rows as u32, columns as u32);
 
         let mut controller = DisplayController {
             display: Map::new(&dimensions),
@@ -57,12 +57,12 @@ impl<'dimensions> DisplayController<'dimensions> {
             default_element: Element::default(),
         };
 
-        controller.setup().draw_borders().update_display().flush();
+        controller.setup().draw_borders()?.print_display().flush();
 
-        controller
+        Ok(controller)
     }
 
-    fn draw_borders(&mut self) -> &mut Self {
+    fn draw_borders(&mut self) -> Result<&mut Self, CrosstermError> {
         self.draw_rect(
             &Point::new(0, 0),
             self.dimensions,
@@ -86,8 +86,8 @@ impl<'dimensions> DisplayController<'dimensions> {
     pub fn reset_cursor(&mut self) -> &mut Self {
         queue!(
             self.target,
-            // SetForegroundColor(DEFAULT_FOREGROUND),
-            // SetBackgroundColor(DEFAULT_BACKGROUND),
+            SetForegroundColor(DEFAULT_FOREGROUND),
+            SetBackgroundColor(DEFAULT_BACKGROUND),
             MoveTo(0, 0)
         )
         .unwrap();
@@ -95,72 +95,85 @@ impl<'dimensions> DisplayController<'dimensions> {
         self
     }
 
-    pub fn print_element(&mut self) {
-        let (x, y) = position().unwrap();
-
-        // if x > self.dimensions.x {
-        //     queue!(self.target, MoveTo())
-        // }
-
-        // self
-    }
-
     fn draw_rect(
         &mut self,
         start_position: &Point,
         dimensions: &Point,
         element: Element,
-    ) -> &mut Self {
-        self.draw_line(
-            &element,
-            dimensions.x,
-            start_position,
-            Direction::Horizontal,
-        )
-        .draw_line(
-            &element,
-            dimensions.x,
-            &start_position.addY(dimensions.y),
-            Direction::Horizontal,
-        )
-        .draw_line(&element, dimensions.y, start_position, Direction::Vertical)
-        .draw_line(
-            &element,
-            dimensions.y,
-            &start_position.addX(dimensions.x),
-            Direction::Vertical,
-        )
+    ) -> Result<&mut Self, CrosstermError> {
+        self.draw_line(element, dimensions.x, start_position, Direction::Horizontal)?
+            .draw_line(
+                element,
+                dimensions.x,
+                &start_position.addY(dimensions.y),
+                Direction::Horizontal,
+            )?
+            .draw_line(element, dimensions.y, start_position, Direction::Vertical)?
+            .draw_line(
+                element,
+                dimensions.y,
+                &start_position.addX(dimensions.x),
+                Direction::Vertical,
+            )?;
+
+        Ok(self)
     }
 
     // TODO: Add docs describing that the line draws from top->bottom
     pub fn draw_line(
         &mut self,
-        element: &Element,
+        element: Element,
         len: u32,
         start_position: &Point,
         direction: Direction,
-    ) -> &mut Self {
+    ) -> Result<&mut Self, CrosstermError> {
         for position_change in 0..len {
             let new_position = match direction {
                 Direction::Horizontal => start_position.addX(position_change),
                 Direction::Vertical => start_position.addY(position_change),
             };
 
-            self.draw_item(element, Some(&new_position));
+            self.draw_item(element, &new_position)?;
         }
 
-        self
+        Ok(self)
     }
 
-    fn draw_item(&mut self, element: &Element, move_to: Option<&Point>) -> &mut Self {
-        self
+    fn draw_item(
+        &mut self,
+        element: Element,
+        position: &Point,
+    ) -> Result<&mut Self, CrosstermError> {
         // if position.x > self.dimensions.x || position.y > self.dimensions.y {
         //     panic!("Out of range requested");
         // }
 
-        // dbg!(position.x);
+        let row = self
+            .display
+            .map
+            .get(position.x as usize)
+            .ok_or(ErrorKind::OutOfMemory)?;
 
-        // let col = self.display.get(position.x).unwrap();
+        // // dbg!(self.display.map.len());
+
+        // if row.is_none() {
+        //     dbg!(position.x);
+        // }
+
+        // match row[position.y as usize] {
+        //     Some(mut existing_element) => {
+        //         // existing_element = element;
+        //     }
+        //     None => {}
+        // }
+
+        // *row[position.y as usize] = Some(element);
+
+        // let mut existing_element = row.get(position.y as usize).unwrap().as_ref();
+
+        // existing_element = Some(&element);
+
+        Ok(self)
 
         // // dbg!(col);
 
@@ -174,17 +187,17 @@ impl<'dimensions> DisplayController<'dimensions> {
         // *existing_item = element;
     }
 
-    pub fn update_display(&mut self) -> &mut Self {
+    pub fn print_display(&mut self) -> &mut Self {
         self.reset_cursor();
 
         for row in self.display.map.iter() {
             for element in row.iter() {
                 match element {
                     Some(element) => {
-                        DisplayController::update_element(&mut self.target, element, None);
+                        DisplayController::print_element(&mut self.target, element, None);
                     }
                     None => {
-                        DisplayController::update_element(
+                        DisplayController::print_element(
                             &mut self.target,
                             &self.default_element,
                             None,
@@ -197,13 +210,16 @@ impl<'dimensions> DisplayController<'dimensions> {
         self
     }
 
-    pub fn update_element(target: &mut io::Stdout, element: &Element, move_to: Option<&Point>) {
+    pub fn print_element(
+        target: &mut io::Stdout,
+        element: &Element,
+        move_to: Option<&Point>,
+    ) -> Result<(), CrosstermError> {
         if let Some(move_to_destination) = move_to {
             queue!(
                 target,
                 MoveTo(move_to_destination.x as u16, move_to_destination.y as u16)
-            )
-            .unwrap();
+            )?;
         };
 
         queue!(
@@ -211,12 +227,13 @@ impl<'dimensions> DisplayController<'dimensions> {
             SetForegroundColor(element.foreground),
             SetBackgroundColor(element.background),
             Print(element.value)
-        )
-        .unwrap();
+        )?;
+
+        Ok(())
     }
 
-    pub fn close(&mut self) {
+    pub fn close(target: &mut io::Stdout) {
         disable_raw_mode().unwrap();
-        execute!(self.target, LeaveAlternateScreen, Show).unwrap();
+        execute!(target, LeaveAlternateScreen, Show).unwrap();
     }
 }
