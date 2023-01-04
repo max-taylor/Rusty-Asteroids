@@ -17,7 +17,7 @@ pub enum CollisionResult {
 // Enum stores the damage result of the player or ammunition and also the damage result of the asteroid
 pub struct CollisionOutcome {
     pub affected_damage: u32,
-    pub asteroid_damage: u32,
+    pub enemy_damage: u32,
     pub asteroid_uuid: Uuid,
 }
 
@@ -93,23 +93,12 @@ fn get_positions_with_overlaps(
     drawable_details
 }
 
-fn get_elements_of_type(
-    elements: &Vec<MinimalDrawableDetails>,
-    drawable_type: DrawableType,
-) -> Vec<&MinimalDrawableDetails> {
-    let mut elements_of_type: Vec<&MinimalDrawableDetails> = vec![];
-    for element in elements {
-        if element.drawable_type == drawable_type {
-            elements_of_type.push(element);
-        }
-    }
-
-    elements_of_type
-}
-
 /// UUID of affected drawable item -> UUID of causing drawable item -> collision results
 /// This is stored in a complex manner to increase memory access speed when determining collision results
 type CollisionResults = HashMap<Uuid, HashMap<Uuid, CollisionOutcome>>;
+
+/// How much damage to apply to an enemy when it collides with a player, this should destroy the enemy if a collision occurs
+pub const PLAYER_ENEMY_COLLISION_DAMAGE: u32 = 100;
 
 pub fn run_collision_detection(
     drawable_items: Vec<&DrawableState>,
@@ -120,8 +109,17 @@ pub fn run_collision_detection(
     let positions_with_overlaps = get_positions_with_overlaps(drawable_items, dimensions);
 
     for elements_on_position in positions_with_overlaps {
-        // Single out all the asteroids, so that if there is a player or ammunition on the position we can apply affects
-        let asteroids = get_elements_of_type(&elements_on_position, DrawableType::Enemy);
+        // Single out all the enemies, so that if there is a player or ammunition on the position we can apply affects
+        let mut enemies: Vec<&MinimalDrawableDetails> = vec![];
+
+        for element in &elements_on_position {
+            match element.drawable_type {
+                DrawableType::Enemy(..) => {
+                    enemies.push(element);
+                }
+                _ => {}
+            }
+        }
 
         for element in &elements_on_position {
             match element.drawable_type {
@@ -138,33 +136,38 @@ pub fn run_collision_detection(
                         }
                     };
 
-                    for asteroid in &asteroids {
-                        // Check if the asteroid has already had collision handling applied
-                        if !element_collisions.contains_key(&asteroid.uuid) {
-                            // If the asteroid hit the player, do 1 damage to the player and destroy the asteroid with 100 damage
-                            if element.drawable_type == DrawableType::Player {
-                                element_collisions.insert(
-                                    asteroid.uuid,
-                                    CollisionOutcome {
-                                        affected_damage: 1,
-                                        asteroid_damage: 100,
-                                        asteroid_uuid: asteroid.uuid,
-                                    },
-                                );
-                            } else {
-                                // If the asteroid collided with ammunition, extract the damage applied and destroy the ammunition
-                                if let DrawableType::Ammunition(ammunition_damage) =
-                                    element.drawable_type
-                                {
+                    for enemy in &enemies {
+                        // Only create a new collision if one doesn't exist already for the same element/enemy combination
+                        if !element_collisions.contains_key(&enemy.uuid) {
+                            if let DrawableType::Enemy(enemy_damage) = enemy.drawable_type {
+                                // If an enemy hit the player, apply the enemies damage to the player and destroy the enemy
+                                if element.drawable_type == DrawableType::Player {
                                     element_collisions.insert(
-                                        asteroid.uuid,
+                                        enemy.uuid,
                                         CollisionOutcome {
-                                            affected_damage: 100,
-                                            asteroid_damage: ammunition_damage,
-                                            asteroid_uuid: asteroid.uuid,
+                                            affected_damage: enemy_damage,
+                                            enemy_damage: PLAYER_ENEMY_COLLISION_DAMAGE,
+                                            asteroid_uuid: enemy.uuid,
                                         },
                                     );
+                                } else {
+                                    // If the asteroid collided with ammunition, extract the ammunition damage
+                                    if let DrawableType::Ammunition(ammunition_damage) =
+                                        element.drawable_type
+                                    {
+                                        // Apply the enemies damage to the ammunition and the ammunition's damage to the enemy
+                                        element_collisions.insert(
+                                            enemy.uuid,
+                                            CollisionOutcome {
+                                                affected_damage: enemy_damage,
+                                                enemy_damage: ammunition_damage,
+                                                asteroid_uuid: enemy.uuid,
+                                            },
+                                        );
+                                    }
                                 }
+                            } else {
+                                panic!("Error: Not an enemy in the enemies vector");
                             }
                         }
                     }
@@ -184,44 +187,51 @@ struct Summary {
 
 type CollisionSummary = HashMap<Uuid, Summary>;
 
-pub fn get_collision_summary(collision_results: CollisionResults) {
+fn apply_damage_to_uuid(collision_summary: &mut CollisionSummary, uuid: Uuid, damage: u32) {
+    match (collision_summary.get_mut(&uuid)) {
+        Some(item) => item.damage += damage,
+        None => {
+            collision_summary.insert(uuid, Summary { uuid, damage });
+        }
+    };
+}
+
+/// Method reduces the collision results hashmap into a summary of damages for each element
+fn get_collision_summary(collision_results: CollisionResults) -> CollisionSummary {
     let mut collision_summary: CollisionSummary = HashMap::new();
 
     for (uuid, element_collisions) in collision_results {
-        let element_summary = match (collision_summary.get_mut(&uuid)) {
-            Some(item) => item,
-            None => {
-                collision_summary.insert(uuid, Summary { uuid, damage: 0 });
-
-                collision_summary.get_mut(&uuid).unwrap()
-            }
-        };
-
-        for (_, collision) in element_collisions {
-            // let asteroid_summary = match (collision_summary.get_mut(&collision.asteroid_uuid)) {
-            //     Some(item) => item,
-            //     None => {
-            //         collision_summary.insert(uuid, Summary { uuid, damage: 0 });
-
-            //         collision_summary.get_mut(&uuid).unwrap()
-            //     }
-            // };
-
-            element_summary.damage += collision.affected_damage;
+        for (_, asteroid_collision) in element_collisions {
+            // Apply damage to the element
+            apply_damage_to_uuid(
+                &mut collision_summary,
+                uuid,
+                asteroid_collision.affected_damage,
+            );
+            // Also apply damage to the asteroid
+            apply_damage_to_uuid(
+                &mut collision_summary,
+                asteroid_collision.asteroid_uuid,
+                asteroid_collision.enemy_damage,
+            );
         }
     }
+
+    collision_summary
 }
 
 #[cfg(test)]
 mod tests {
+    use uuid::Uuid;
+
     use crate::{
         api::display::{Map, Point, TwoDVec},
         components::Drawable,
-        entities::{Asteroid, Bullet, Player, BULLET_DAMAGE},
-        systems::CollisionResult,
+        entities::{player, Asteroid, Bullet, Player, ASTEROID_DAMAGE, BULLET_DAMAGE},
+        systems::{CollisionResult, PLAYER_ENEMY_COLLISION_DAMAGE},
     };
 
-    use super::{get_positions_with_overlaps, run_collision_detection};
+    use super::{get_collision_summary, get_positions_with_overlaps, run_collision_detection};
 
     const POSITION: Point<i64> = Point {
         width: 5,
@@ -309,7 +319,10 @@ mod tests {
         assert_eq!(player_asteroid_collision.affected_damage, 1);
 
         // Expect that the asteroid took damage
-        assert_eq!(player_asteroid_collision.asteroid_damage, 100);
+        assert_eq!(
+            player_asteroid_collision.enemy_damage,
+            PLAYER_ENEMY_COLLISION_DAMAGE
+        );
     }
 
     /**
@@ -344,10 +357,13 @@ mod tests {
             ammunition_collisions.get(&asteroid.drawable.uuid).unwrap();
 
         // Expect that the bullet took damange
-        assert_eq!(ammunition_asteroid_collision.affected_damage, 100);
+        assert_eq!(
+            ammunition_asteroid_collision.affected_damage,
+            ASTEROID_DAMAGE
+        );
 
         // Expect that the asteroid took damage equal to the bullets damage
-        assert_eq!(ammunition_asteroid_collision.asteroid_damage, BULLET_DAMAGE);
+        assert_eq!(ammunition_asteroid_collision.enemy_damage, BULLET_DAMAGE);
     }
 
     /**
@@ -377,5 +393,49 @@ mod tests {
         let player_collisions = collisions.get(&player.drawable.uuid).unwrap();
 
         assert_eq!(player_collisions.len(), 1);
+    }
+
+    #[test]
+    fn it_should_return_collisions_and_summarize_for_a_player_ammunition_and_multiple_asteroids() {
+        let player = Player::new(Some(POSITION));
+        let asteroid1 = get_asteroid_mock();
+        let asteroid2 = get_asteroid_mock();
+        let ammunition = Bullet::new(POSITION);
+
+        let drawable_states = vec![
+            player.get_drawable_state(),
+            asteroid1.get_drawable_state(),
+            asteroid2.get_drawable_state(),
+            ammunition.get_drawable_state(),
+        ];
+
+        let collisions = run_collision_detection(
+            drawable_states,
+            &Point {
+                width: 30,
+                height: 30,
+            },
+        );
+
+        let collision_summary = get_collision_summary(collisions);
+
+        assert_eq!(collision_summary.len(), 4);
+
+        for (_, collision) in collision_summary {
+            if collision.uuid == player.drawable.uuid || collision.uuid == ammunition.drawable.uuid
+            {
+                assert_eq!(collision.damage, ASTEROID_DAMAGE * 2);
+            } else if collision.uuid == asteroid1.drawable.uuid
+                || collision.uuid == asteroid2.drawable.uuid
+            {
+                assert_eq!(
+                    collision.damage,
+                    BULLET_DAMAGE + PLAYER_ENEMY_COLLISION_DAMAGE
+                );
+            } else {
+                // Ensure all items are tested
+                panic!("No test case for element in collision summary")
+            }
+        }
     }
 }

@@ -13,7 +13,8 @@ pub struct DrawableState {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum DrawableType {
     Player,
-    Enemy,
+    // Damage of enemy
+    Enemy(u32),
     Border,
     // Damage of ammunition
     Ammunition(u32),

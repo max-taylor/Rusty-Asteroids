@@ -12,6 +12,8 @@ use super::consts::ASTEROID;
 
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
+pub const ASTEROID_DAMAGE: u32 = 1;
+
 pub struct Asteroid {
     pub drawable: DrawableState,
     pub health: u32,
@@ -22,7 +24,12 @@ impl Asteroid {
         let map = Layout::from_ascii(ASTEROID);
 
         Self {
-            drawable: DrawableState::new(map, location, DrawableType::Enemy, Some(velocity)),
+            drawable: DrawableState::new(
+                map,
+                location,
+                DrawableType::Enemy(ASTEROID_DAMAGE),
+                Some(velocity),
+            ),
             health: 1,
         }
     }
