@@ -1,10 +1,11 @@
 use crate::{
     api::display::Point,
-    components::{Drawable, DrawableState},
+    components::{Drawable, DrawableState, Health},
     entities::Asteroid,
     helpers::get_now,
 };
 use rand::Rng;
+use uuid::Uuid;
 
 pub struct AsteroidController {
     pub asteroids: Vec<Asteroid>,
@@ -68,5 +69,28 @@ impl AsteroidController {
             .iter()
             .map(|asteroid| asteroid.get_drawable_state())
             .collect()
+    }
+
+    pub fn apply_asteroid_damage(&mut self, uuid: Uuid, damage: u32) -> &mut Self {
+        let asteroid_index = self
+            .asteroids
+            .iter_mut()
+            .position(|asteroid| asteroid.drawable.uuid == uuid);
+
+        if asteroid_index.is_none() {
+            return self;
+        }
+        // TODO: Clean this
+        let asteroid_index_2 = asteroid_index.unwrap();
+
+        // asteroid_index = asteroid_index.unwrap();
+
+        self.asteroids[asteroid_index_2].apply_damage(damage);
+
+        if self.asteroids[asteroid_index_2].health == 0 {
+            self.asteroids.remove(asteroid_index_2);
+        }
+
+        self
     }
 }

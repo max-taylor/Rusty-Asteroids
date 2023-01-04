@@ -180,15 +180,15 @@ pub fn run_collision_detection(
     collision_outcomes
 }
 
-struct Summary {
+pub struct Summary {
     pub uuid: Uuid,
     pub damage: u32,
 }
 
-type CollisionSummary = HashMap<Uuid, Summary>;
+pub type CollisionSummary = HashMap<Uuid, Summary>;
 
-fn apply_damage_to_uuid(collision_summary: &mut CollisionSummary, uuid: Uuid, damage: u32) {
-    match (collision_summary.get_mut(&uuid)) {
+pub fn apply_damage_to_uuid(collision_summary: &mut CollisionSummary, uuid: Uuid, damage: u32) {
+    match collision_summary.get_mut(&uuid) {
         Some(item) => item.damage += damage,
         None => {
             collision_summary.insert(uuid, Summary { uuid, damage });
@@ -197,7 +197,7 @@ fn apply_damage_to_uuid(collision_summary: &mut CollisionSummary, uuid: Uuid, da
 }
 
 /// Method reduces the collision results hashmap into a summary of damages for each element
-fn get_collision_summary(collision_results: CollisionResults) -> CollisionSummary {
+pub fn get_collision_summary(collision_results: CollisionResults) -> CollisionSummary {
     let mut collision_summary: CollisionSummary = HashMap::new();
 
     for (uuid, element_collisions) in collision_results {

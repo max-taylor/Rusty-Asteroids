@@ -5,7 +5,7 @@ use crate::{
         element::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
         Element, Layout, Point,
     },
-    components::{Drawable, DrawableState, DrawableType},
+    components::{get_updated_health, Drawable, DrawableState, DrawableType, Health},
 };
 
 use super::consts::ASTEROID;
@@ -44,5 +44,13 @@ impl Drawable for Asteroid {
 
     fn get_drawable_state(&self) -> &DrawableState {
         &self.drawable
+    }
+}
+
+impl Health for Asteroid {
+    fn apply_damage(&mut self, damage: u32) -> &mut Self {
+        self.health = get_updated_health(self.health, damage);
+
+        self
     }
 }

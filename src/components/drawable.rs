@@ -43,8 +43,8 @@ pub fn update_position_for_drawable_vec(
     drawable_vec: &mut Vec<impl Drawable>,
     game_loop_duration: u128,
 ) {
-    drawable_vec.iter_mut().for_each(|bullet| {
-        bullet.update_position(None, game_loop_duration);
+    drawable_vec.iter_mut().for_each(|drawable| {
+        drawable.update_position(None, game_loop_duration);
     });
 }
 

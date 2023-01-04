@@ -7,7 +7,7 @@ use crate::{
     components::{update_position_for_drawable_vec, Drawable, DrawableState},
     entities::{Borders, Controller, Player},
     helpers::get_now,
-    systems::{run_collision_detection, AsteroidController},
+    systems::{get_collision_summary, run_collision_detection, AsteroidController},
 };
 
 use super::game_state::GameState;
@@ -45,7 +45,7 @@ impl App {
             borders: Borders::new(&dimensions)?,
             output,
             player: Player::new(None),
-            asteroid_controller: AsteroidController::new(500, dimensions),
+            asteroid_controller: AsteroidController::new(100, dimensions),
             dimensions,
         })
     }
@@ -62,12 +62,14 @@ impl App {
     pub fn run(&mut self) -> Result<(), DisplayControllerError> {
         self.start()?;
 
+        // Simple "try-catch" wrapper to catch panic's so we can safely shutdown the display
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
                 while self.game_state.is_running() {
                     let game_loop_start = get_now();
                     self.reset()?;
 
+                    // Handle keyboard presses
                     if poll(Duration::from_millis(100))? {
                         let event = read()?;
 
@@ -91,8 +93,7 @@ impl App {
 
                     self.update_positions(game_loop_duration);
 
-                    let collision_results =
-                        run_collision_detection(self.get_all_drawable_states(), &self.dimensions);
+                    self.handle_collisions();
 
                     self.draw_all_entities()?;
                 }
@@ -103,6 +104,20 @@ impl App {
         self.shut_down()?;
 
         result.unwrap()
+    }
+
+    fn handle_collisions(&mut self) -> &mut Self {
+        let collision_results = get_collision_summary(run_collision_detection(
+            self.get_all_drawable_states(),
+            &self.dimensions,
+        ));
+
+        for (uuid, collision) in collision_results {
+            self.asteroid_controller
+                .apply_asteroid_damage(uuid, collision.damage);
+        }
+
+        self
     }
 
     fn update_positions(&mut self, game_loop_duration: u128) -> &mut Self {

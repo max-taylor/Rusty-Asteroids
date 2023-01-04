@@ -2,7 +2,7 @@ use crossterm::event::KeyCode;
 
 use crate::{
     api::display::{Layout, Point},
-    components::{Drawable, DrawableState, DrawableType, Spawnable},
+    components::{get_updated_health, Drawable, DrawableState, DrawableType, Health, Spawnable},
 };
 
 use super::{consts::SPACE_SHIP, controller::create_event, Bullet, Controller};
@@ -10,6 +10,7 @@ use super::{consts::SPACE_SHIP, controller::create_event, Bullet, Controller};
 pub struct Player {
     pub drawable: DrawableState,
     pub bullets: Vec<Bullet>,
+    pub health: u32,
 }
 
 const WIDTH_MAX_VELOCITY: i64 = 33;
@@ -37,6 +38,7 @@ impl Player {
                 DrawableType::Player,
                 None,
             ),
+            health: 100,
             bullets: Default::default(),
         }
     }
@@ -48,10 +50,9 @@ impl Player {
             .collect()
     }
 
-    // TODO: Implement different bullet types
-    // pub fn get_spawnable_entities(&self) -> Spawnable<Bullet> {
-    // self.bullets
-    // }
+    pub fn apply_bullet_damage(&mut self) -> &mut Self {
+        self
+    }
 }
 
 impl Drawable for Player {
@@ -103,6 +104,14 @@ impl Controller for Player {
 
             self.bullets.push(Bullet::new(spawn_position));
         }
+
+        self
+    }
+}
+
+impl Health for Player {
+    fn apply_damage(&mut self, damage: u32) -> &mut Self {
+        self.health = get_updated_health(self.health, damage);
 
         self
     }

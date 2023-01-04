@@ -3,5 +3,5 @@ mod health;
 mod spawnable;
 
 pub use drawable::*;
-pub use health::Health;
+pub use health::*;
 pub use spawnable::*;
