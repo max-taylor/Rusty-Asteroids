@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::{
     api::display::{
         element::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
@@ -6,6 +8,8 @@ use crate::{
     components::{Drawable, DrawableState, DrawableType},
 };
 
+use super::consts::ASTEROID;
+
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
 pub struct Asteroid {
@@ -13,27 +17,23 @@ pub struct Asteroid {
 }
 
 impl Asteroid {
-    pub fn new() -> Self {
-        let map = Layout::new(
-            &Point {
-                width: 1,
-                height: 1,
-            },
-            Some(ARROW_ELEMENT),
-        );
+    pub fn new(dimensions: &Point<u32>) -> Self {
+        let mut rng = rand::thread_rng();
+
+        let location = Point {
+            height: 0,
+            width: rng.gen_range(0..dimensions.width),
+        };
+
+        let map = Layout::from_ascii(ASTEROID);
 
         let velocity: Point<i64> = Point {
-            height: 5,
+            height: 3,
             width: 0,
         };
 
         Self {
-            drawable: DrawableState::new(
-                map,
-                Default::default(),
-                DrawableType::Enemy,
-                Some(velocity),
-            ),
+            drawable: DrawableState::new(map, location, DrawableType::Enemy, Some(velocity)),
         }
     }
 }

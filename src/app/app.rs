@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::{io::stdout, panic, time::Duration};
 
 use crossterm::{
@@ -22,7 +23,10 @@ pub struct App {
     player: Player,
     bullets: Vec<Bullet>,
     asteroids: Vec<Asteroid>,
+    dimensions: Point<u32>,
 }
+
+const SPAWN_GAME_LOOPS: u32 = 5;
 
 impl App {
     pub fn new(dimensions: &Point<u32>) -> Result<App, DisplayControllerError> {
@@ -50,6 +54,7 @@ impl App {
             player: Player::new(),
             bullets: Default::default(),
             asteroids: Default::default(),
+            dimensions: *dimensions,
         })
     }
 
@@ -67,6 +72,8 @@ impl App {
     pub fn run(&mut self) -> Result<(), DisplayControllerError> {
         self.start()?;
 
+        let mut spawn_in_loops = SPAWN_GAME_LOOPS;
+
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
                 while self.game_state.is_running() {
@@ -82,6 +89,12 @@ impl App {
                         }
 
                         self.game_state.keyboard_event = Some(event);
+                    }
+
+                    if spawn_in_loops == 0 {
+                        self.asteroids.push(Asteroid::new(&self.dimensions));
+
+                        spawn_in_loops = SPAWN_GAME_LOOPS;
                     }
 
                     // let test_items: Vec<Box<dyn Drawable>> = Vec::new():
@@ -108,15 +121,21 @@ impl App {
 
                     update_positions(vec![&mut self.player]);
                     update_positions(self.bullets.iter_mut().collect());
+                    update_positions(self.asteroids.iter_mut().collect());
 
                     self.display_controller
                         .draw_vec_drawable(self.bullets.iter().collect())?;
+
+                    self.display_controller
+                        .draw_vec_drawable(self.asteroids.iter().collect())?;
 
                     self.display_controller.draw_drawable(&self.player)?;
 
                     // let drawable_items: Vec<impl Drawable> = vec![self.borders];
 
                     self.output.print_display(&self.display_controller.layout)?;
+
+                    spawn_in_loops -= 1;
                 }
 
                 Ok(())
