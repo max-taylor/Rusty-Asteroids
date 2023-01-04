@@ -7,10 +7,8 @@ use crossterm::{
     terminal::{disable_raw_mode, size, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
-use crate::display::element::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
-
 use super::{
-    element::{self, Element},
+    element::{Element, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
     Point,
 };
 
@@ -45,16 +43,16 @@ impl DisplayController {
         self
     }
 
-    pub fn draw_vertical_line(&mut self, value: char) -> &mut Self {
-        // execute!()
-        self
-    }
+    // pub fn draw_vertical_line(&mut self, value: char) -> &mut Self {
+    //     // execute!()
+    //     self
+    // }
 
     pub fn reset_cursor(&mut self) -> &mut Self {
         queue!(
             self.target,
-            SetForegroundColor(DEFAULT_FOREGROUND),
-            SetBackgroundColor(DEFAULT_BACKGROUND),
+            // SetForegroundColor(DEFAULT_FOREGROUND),
+            // SetBackgroundColor(DEFAULT_BACKGROUND),
             MoveTo(0, 0)
         )
         .unwrap();

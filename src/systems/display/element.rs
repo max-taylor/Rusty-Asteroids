@@ -1,7 +1,7 @@
 use crossterm::style::Color;
 
-pub const DEFAULT_BACKGROUND: Color = Color::White;
-pub const DEFAULT_FOREGROUND: Color = Color::White;
+pub const DEFAULT_BACKGROUND: Color = Color::Blue;
+pub const DEFAULT_FOREGROUND: Color = Color::Blue;
 
 #[derive(Clone, Copy)]
 pub struct Element {

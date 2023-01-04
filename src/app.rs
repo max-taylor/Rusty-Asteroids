@@ -5,8 +5,8 @@ use crossterm::{
 };
 
 use crate::{
-    display::{DisplayController, Point},
     entities::{Controller, Player},
+    systems::display::{DisplayController, Point},
 };
 
 pub struct App {

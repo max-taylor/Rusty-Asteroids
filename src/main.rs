@@ -1,10 +1,10 @@
 mod app;
 mod components;
-mod display;
 mod entities;
+mod systems;
 
 use app::App;
-use display::Point;
+use systems::display::Point;
 
 fn main() {
     App::new(Point::new(30, 30)).unwrap()
