@@ -18,6 +18,15 @@ pub struct Point<T> {
 //     }
 // }
 
+impl Into<Point<i64>> for Point<u32> {
+    fn into(self) -> Point<i64> {
+        Point {
+            height: self.height.into(),
+            width: self.width.into(),
+        }
+    }
+}
+
 impl<T> Default for Point<T>
 where
     T: AddAssign + SubAssign + Default,

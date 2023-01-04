@@ -2,7 +2,7 @@ use crossterm::event::KeyCode;
 
 use crate::{
     api::display::{Layout, Point},
-    components::{Drawable, DrawableState, Velocity},
+    components::{Drawable, DrawableState, DrawableType},
 };
 
 use super::{consts::SPACE_SHIP, controller::create_event, Controller};
@@ -23,7 +23,7 @@ impl Player {
         let map = Layout::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: DrawableState::new(map, location),
+            drawable: DrawableState::new(map, location, DrawableType::Player),
         }
     }
 }
@@ -36,25 +36,25 @@ impl Drawable for Player {
 
 impl Controller for Player {
     fn up(&mut self) -> &mut Self {
-        self.drawable.velocity = Velocity::new(0, -MAX_VELOCITY);
+        self.drawable.velocity = Point::new(0, -MAX_VELOCITY);
 
         self
     }
 
     fn down(&mut self) -> &mut Self {
-        self.drawable.velocity = Velocity::new(0, MAX_VELOCITY);
+        self.drawable.velocity = Point::new(0, MAX_VELOCITY);
 
         self
     }
 
     fn left(&mut self) -> &mut Self {
-        self.drawable.velocity = Velocity::new(-MAX_VELOCITY, 0);
+        self.drawable.velocity = Point::new(-MAX_VELOCITY, 0);
 
         self
     }
 
     fn right(&mut self) -> &mut Self {
-        self.drawable.velocity = Velocity::new(MAX_VELOCITY, 0);
+        self.drawable.velocity = Point::new(MAX_VELOCITY, 0);
 
         self
     }

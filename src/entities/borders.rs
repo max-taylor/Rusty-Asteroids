@@ -1,6 +1,6 @@
 use crate::{
     api::display::{DisplayControllerError, Element, Layout, Point},
-    components::{Drawable, DrawableState},
+    components::{Drawable, DrawableState, DrawableType},
 };
 
 #[derive(Debug)]
@@ -14,6 +14,7 @@ impl Borders {
             layout: Layout::new(dimensions, None),
             location: Point::default(),
             velocity: Default::default(),
+            drawable_type: DrawableType::Border,
         };
 
         drawable.layout.draw_rect(
