@@ -16,7 +16,9 @@ use super::{
 
 pub struct DisplayController<'dimensions> {
     dimensions: &'dimensions Point,
-    display: Map<'dimensions>,
+    offset: Point,
+    screen_size: Point,
+    display: Map,
     default_element: Element,
     pub target: io::Stdout,
 }
@@ -28,6 +30,8 @@ pub enum Direction {
 
 const BORDER_ELEMENT: Element = Element::new('x', Color::Black, Color::Black);
 const PADDING: Point = Point::new(10, 10);
+
+// TODO -> This x/y business is annoying, change to rows/columns or make it clearer
 
 impl<'dimensions> DisplayController<'dimensions> {
     /// Creates a new display controller, a display controller fills the entire screen but the provided dimensions will be the controllable area
@@ -44,14 +48,22 @@ impl<'dimensions> DisplayController<'dimensions> {
             return Err(DisplayControllerError::DisplayTooSmallForDimensions);
         }
 
+        let screen_size = Point::new(columns as u32, rows as u32);
+
+        dbg!(&screen_size);
+
         // Make game size of terminal and draw dimensions in middle
 
         let mut controller = DisplayController {
-            display: Map::new(&dimensions),
+            display: Map::new(&screen_size),
             target: stdout(),
             dimensions: &dimensions,
             default_element: Element::default(),
+            screen_size,
+            offset: (screen_size - *dimensions) / Point::new(2, 2),
         };
+
+        dbg!(controller.offset);
 
         controller.setup().draw_borders()?.print_display()?.flush();
 
@@ -145,17 +157,21 @@ impl<'dimensions> DisplayController<'dimensions> {
             return Err(DisplayControllerError::PositionOutOfRange);
         }
 
+        let updated_positions = self.offset + *position;
+
+        dbg!(updated_positions);
+
         let row = self
             .display
             .map
-            .get_mut(position.x as usize)
+            .get_mut(updated_positions.y as usize)
             .ok_or(DisplayControllerError::PositionOutOfRange)?;
 
         // This could instead just have the .insert chained on the above expression to replace the item, but this is a bit more verbose for my learning
-        if let Some(existing_item) = row[position.y as usize].as_mut() {
+        if let Some(existing_item) = row[updated_positions.x as usize].as_mut() {
             *existing_item = element;
         } else {
-            row.insert(position.y as usize, Some(element));
+            row.insert(updated_positions.x as usize, Some(element));
         }
 
         Ok(self)

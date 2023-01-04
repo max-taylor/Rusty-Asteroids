@@ -2,7 +2,7 @@ use std::ops::{Add, Div, Mul, Sub};
 
 use crossterm::cursor::MoveTo;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Point {
     pub x: u32,
     pub y: u32,

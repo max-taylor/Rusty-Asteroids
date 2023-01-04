@@ -4,14 +4,14 @@ use super::Position;
 
 pub struct PositionController<'dimensions, 'display_controller> {
     /// Positions represent distinct characters, items, etc.
-    positions: Vec<Position<'dimensions>>,
+    positions: Vec<Position>,
     /// This will interface with the display controller to simplify drawing
     display_controller: &'display_controller mut DisplayController<'dimensions>,
 }
 
 impl<'dimensions, 'display_controller> PositionController<'dimensions, 'display_controller> {
     pub fn new(
-        positions: Vec<Position<'dimensions>>,
+        positions: Vec<Position>,
         display_controller: &'display_controller mut DisplayController<'dimensions>,
     ) -> Self {
         Self {

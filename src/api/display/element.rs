@@ -13,7 +13,8 @@ pub struct Element {
 impl Default for Element {
     fn default() -> Self {
         Self {
-            value: Default::default(),
+            // value: Default::default(),
+            value: '&',
             background: DEFAULT_BACKGROUND,
             foreground: DEFAULT_FOREGROUND,
         }

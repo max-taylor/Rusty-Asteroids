@@ -7,7 +7,7 @@ use super::Entity;
 
 pub struct Borders<'dimensions> {
     dimensions: &'dimensions Point,
-    position: Position<'dimensions>,
+    position: Position,
 }
 
 impl<'dimensions> Borders<'dimensions> {
