@@ -1,6 +1,9 @@
 use std::{io::stdout, panic, time::Duration};
 
-use crossterm::event::{poll, read, Event, KeyCode};
+use crossterm::{
+    event::{poll, read, Event, KeyCode},
+    terminal::size,
+};
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
@@ -10,7 +13,7 @@ use crate::{
     systems::{get_collision_summary, run_collision_detection, AsteroidController},
 };
 
-use super::game_state::GameState;
+use super::game_state::{GameState, ASTEROID_DESTROYED_POINTS};
 
 pub struct App {
     display_controller: DisplayController,
@@ -22,11 +25,17 @@ pub struct App {
     dimensions: Point<i64>,
 }
 
-const SPAWN_GAME_LOOPS: i64 = 5;
+const HUD_HEIGHT: u32 = 10;
 
 impl App {
     pub fn new(dimensions: Option<&Point<i64>>) -> Result<App, DisplayControllerError> {
         let mut output = Output::new(stdout());
+
+        // let (rows, columns) = size().unwrap();
+
+        // let game_display_height = columns - (HUD_HEIGHT as u16);
+
+        // let game_dimensions = &Point::new(rows as i64, game_display_height as i64);
 
         let display_controller = DisplayController::new(dimensions);
 
@@ -35,12 +44,13 @@ impl App {
 
             return Err(error.clone());
         }
-        let display_controller = display_controller.unwrap();
 
-        let dimensions = display_controller.layout.dimensions;
+        let game_display_controller = display_controller.unwrap();
+
+        let dimensions = game_display_controller.layout.dimensions;
 
         Ok(App {
-            display_controller: display_controller,
+            display_controller: game_display_controller,
             game_state: GameState::new(),
             borders: Borders::new(&dimensions)?,
             output,
@@ -59,6 +69,26 @@ impl App {
         Ok(())
     }
 
+    /// Process the keyboard events, also returns true if the user closes the game with escape
+    fn handle_keyboard(&mut self) -> Result<bool, DisplayControllerError> {
+        // Handle keyboard presses
+        if poll(Duration::from_millis(100))? {
+            let event = read()?;
+
+            if event == Event::Key(KeyCode::Esc.into()) {
+                return Ok(true);
+            }
+
+            self.game_state.keyboard_event = Some(event);
+        }
+
+        if let Some(event) = &self.game_state.keyboard_event {
+            self.player.handle_event(&event);
+        }
+
+        Ok(false)
+    }
+
     pub fn run(&mut self) -> Result<(), DisplayControllerError> {
         self.start()?;
 
@@ -69,21 +99,9 @@ impl App {
                     let game_loop_start = get_now();
                     self.reset()?;
 
-                    // Handle keyboard presses
-                    if poll(Duration::from_millis(100))? {
-                        let event = read()?;
-
-                        if event == Event::Key(KeyCode::Esc.into()) {
-                            self.output.close()?;
-
-                            break;
-                        }
-
-                        self.game_state.keyboard_event = Some(event);
-                    }
-
-                    if let Some(event) = &self.game_state.keyboard_event {
-                        self.player.handle_event(&event);
+                    let shutdown = self.handle_keyboard()?;
+                    if shutdown {
+                        break;
                     }
 
                     let game_loop_duration = get_now() - game_loop_start;
@@ -113,19 +131,27 @@ impl App {
         ));
 
         for (uuid, collision) in collision_results {
+            // Asteroid collision
             if self
                 .asteroid_controller
                 .entity_controller
                 .has_entity(collision.uuid)
             {
-                self.asteroid_controller
+                let destroyed = self
+                    .asteroid_controller
                     .entity_controller
                     .apply_entity_damage(uuid, collision.damage);
+
+                if destroyed {
+                    self.game_state.score += ASTEROID_DESTROYED_POINTS;
+                }
             } else if self.player.bullet_entity_controller.has_entity(uuid) {
+                // Bullet collision
                 self.player
                     .bullet_entity_controller
                     .apply_entity_damage(uuid, collision.damage);
             } else if self.player.drawable.uuid == uuid {
+                // Player collision
                 self.player.apply_damage(collision.damage);
 
                 if self.player.get_health() == 0 {

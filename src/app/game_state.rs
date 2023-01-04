@@ -1,18 +1,20 @@
 use crossterm::event::Event;
 
-use crate::components::Drawable;
-
 pub struct GameState {
     running: bool,
     pub keyboard_event: Option<Event>,
+    pub score: u64,
     // pub drawables_in_frame: Vec<dyn Drawable>,
 }
+
+pub const ASTEROID_DESTROYED_POINTS: u64 = 1;
 
 impl GameState {
     pub fn new() -> Self {
         Self {
             running: false,
             keyboard_event: None,
+            score: 0,
         }
     }
 

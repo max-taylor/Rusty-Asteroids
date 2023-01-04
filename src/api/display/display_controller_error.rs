@@ -8,6 +8,7 @@ pub enum DisplayControllerError {
     PositionOutOfRange,
     CrossTermWriteError,
     CasteError(Error),
+    Shutdown,
 }
 
 impl DisplayControllerError {

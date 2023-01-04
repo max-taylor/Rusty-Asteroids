@@ -39,18 +39,24 @@ impl<T: Drawable + Health> EntityController<T> {
         self
     }
 
-    pub fn apply_entity_damage(&mut self, uuid: Uuid, damage: u32) -> &mut Self {
+    /// Applies damage to a given entity associated with the uuid
+    /// Returns true if the entity was destroyed
+    pub fn apply_entity_damage(&mut self, uuid: Uuid, damage: u32) -> bool {
         let entity = self.entity_hashmap.get_mut(&uuid);
+
+        let mut destroyed = false;
 
         if let Some(entity) = entity {
             entity.apply_damage(damage);
 
             if entity.get_health() == 0 {
                 self.delete_entity(uuid);
+
+                destroyed = true;
             }
         }
 
-        self
+        destroyed
     }
 
     pub fn update_entity_positions(&mut self, game_loop_duration: u128) -> &mut Self {

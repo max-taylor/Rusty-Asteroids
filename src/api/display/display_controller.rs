@@ -29,16 +29,18 @@ impl DisplayController {
         let screen_size = &Point::new(rows as i64, columns as i64);
 
         let (dimensions, offset) = match dimensions {
-            Some(has_dimensions) => {
-                if has_dimensions.height > columns.into() || has_dimensions.width > rows.into() {
+            Some(dimensions) => {
+                if dimensions.height > columns.into() || dimensions.width > rows.into() {
                     return Err(DisplayControllerError::DisplayTooSmallForDimensions);
                 }
-                let offset = (*screen_size - *has_dimensions) / Point::new(2, 2);
+                // The offset is
+                let offset = (*screen_size - *dimensions) / (2 as i64).into();
 
-                (has_dimensions, offset)
+                (dimensions, offset)
             }
             // If no dimensions provided use the screen_size and set a 0,0 offset
             None => (screen_size, Default::default()),
+            // None => (screen_size, Point::new(0, 10)),
         };
 
         Ok(DisplayController {
@@ -49,7 +51,6 @@ impl DisplayController {
     }
 
     /// This method handles drawing drawable elements, it also skips over the drawing of an element if it is outside the range
-    ///
     pub fn draw_drawable(
         &mut self,
         drawable_state: &DrawableState,
