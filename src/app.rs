@@ -5,8 +5,9 @@ use crossterm::{
 };
 
 use crate::{
+    api::{DisplayController, Point},
     entities::{Controller, Player},
-    systems::display::{DisplayController, Point},
+    systems::position::{Position, PositionController},
 };
 
 pub struct App<'dimensions> {
@@ -18,9 +19,12 @@ impl<'dimensions> App<'dimensions> {
     pub fn new(dimensions: Point) -> Result<()> {
         enable_raw_mode()?;
 
+        let display_controller = DisplayController::new(dimensions);
+        let position_controller = PositionController::new(vec![], display_controller);
+
         let mut app = App {
-            display_controller: DisplayController::new(&dimensions),
             player: Player::new(),
+            display_controller,
         };
 
         app.setup_listeners();

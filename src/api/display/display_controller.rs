@@ -8,6 +8,7 @@ use crossterm::{
     terminal::{disable_raw_mode, size, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
+use super::Map;
 use super::{
     element::{Element, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
     Point,
@@ -15,7 +16,7 @@ use super::{
 
 pub struct DisplayController<'dimensions> {
     dimensions: &'dimensions Point,
-    display: Vec<Vec<Element>>,
+    display: Map<'dimensions>,
     target: io::Stdout,
 }
 
@@ -34,20 +35,27 @@ const BORDER_ELEMENT: Element = Element::from('x', Color::Black, Color::Black);
 const PADDING: Point = Point::new(10, 10);
 
 impl<'dimensions> DisplayController<'dimensions> {
-    pub fn new(dimensions: &'dimensions Point) -> Self {
+    /// Creates a new display controller, a display controller fills the entire screen but the provided dimensions will be the controllable area
+    ///
+    /// # Arguments
+    ///
+    /// * `dimensions` - The controllable area
+    ///
+    /// ```
+    pub fn new(dimensions: Point) -> Self {
         let (columns, rows) = size().unwrap();
 
-        if dimensions.x > rows as usize || dimensions.y > columns as usize {
+        if dimensions.x > rows.into() || dimensions.y > columns.into() {
             panic!("Invalid dimensions");
         }
 
         let mut controller = DisplayController {
-            display: vec![vec![Element::new(); rows.into()]; columns.into()],
+            display: Map::new(&dimensions),
             target: stdout(),
             dimensions: &dimensions,
         };
 
-        controller.setup().draw_borders().draw_display();
+        controller.setup().draw_borders().draw_display().flush();
 
         // Publish all queued writes
         controller.target.flush().unwrap();
@@ -65,6 +73,13 @@ impl<'dimensions> DisplayController<'dimensions> {
 
     fn setup(&mut self) -> &mut Self {
         queue!(self.target, EnterAlternateScreen, Hide).unwrap();
+
+        self
+    }
+
+    /// Flushing the target publishes all queued writes
+    fn flush(&mut self) -> &mut Self {
+        self.target.flush().unwrap();
 
         self
     }
@@ -122,7 +137,7 @@ impl<'dimensions> DisplayController<'dimensions> {
     pub fn draw_line(
         &mut self,
         element: &Element,
-        len: usize,
+        len: u32,
         start_position: &Point,
         direction: Direction,
     ) -> &mut Self {
@@ -145,18 +160,18 @@ impl<'dimensions> DisplayController<'dimensions> {
 
         // dbg!(position.x);
 
-        let col = self.display.get(position.x).unwrap();
+        // let col = self.display.get(position.x).unwrap();
 
-        // dbg!(col);
+        // // dbg!(col);
 
-        // match col.get(position.y).as_mut() {
-        //     Some(&mut existing_item) => *existing_item = *element,
-        // }
+        // // match col.get(position.y).as_mut() {
+        // //     Some(&mut existing_item) => *existing_item = *element,
+        // // }
 
-        let existing_item = &mut col.get(position.y).unwrap();
+        // let existing_item = &mut col.get(position.y).unwrap();
 
-        // Dereference the value so we assign to it
-        *existing_item = element;
+        // // Dereference the value so we assign to it
+        // *existing_item = element;
 
         // queue!(
         //     self.target,
@@ -171,15 +186,20 @@ impl<'dimensions> DisplayController<'dimensions> {
     pub fn draw_display(&mut self) -> &mut Self {
         self.reset_cursor();
 
-        for row in self.display.iter() {
+        for row in self.display.map.iter() {
             for element in row.iter() {
-                queue!(
-                    self.target,
-                    SetForegroundColor(element.foreground),
-                    SetBackgroundColor(element.background),
-                    Print(element.value)
-                )
-                .unwrap();
+                match element {
+                    Some(element) => {
+                        queue!(
+                            self.target,
+                            SetForegroundColor(element.foreground),
+                            SetBackgroundColor(element.background),
+                            Print(element.value)
+                        )
+                        .unwrap();
+                    }
+                    None => {}
+                }
             }
         }
 

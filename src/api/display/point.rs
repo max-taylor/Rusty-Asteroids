@@ -2,22 +2,26 @@ use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct Point {
-    pub x: usize,
-    pub y: usize,
+    pub x: u32,
+    pub y: u32,
 }
 
 impl Point {
-    pub const fn new(x: usize, y: usize) -> Self {
+    pub const fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
 
-    pub fn addX(mut self, x: usize) -> Self {
+    pub fn home_point() -> Self {
+        Self { x: 0, y: 0 }
+    }
+
+    pub fn addX(mut self, x: u32) -> Self {
         self.x += x;
 
         self
     }
 
-    pub fn addY(mut self, y: usize) -> Self {
+    pub fn addY(mut self, y: u32) -> Self {
         self.y += y;
 
         self
