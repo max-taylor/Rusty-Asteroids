@@ -13,6 +13,7 @@ impl Borders {
         let mut drawable = Drawable {
             map: Map::new(dimensions, None),
             location: Point::default(),
+            velocity: 0,
         };
 
         drawable.map.draw_rect(

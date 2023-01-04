@@ -9,7 +9,6 @@ use super::{consts::SPACE_SHIP, controller::create_event, Controller};
 
 pub struct Player {
     pub drawable: Drawable,
-    pub move_speed: u32,
 }
 
 impl Player {
@@ -22,33 +21,36 @@ impl Player {
         let map = Map::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: Drawable { map, location },
-            move_speed: 1,
+            drawable: Drawable {
+                map,
+                location,
+                velocity: 1,
+            },
         }
     }
 }
 
 impl Controller for Player {
     fn up(&mut self) -> &mut Self {
-        self.drawable.location.height -= self.move_speed;
+        self.drawable.location.height -= self.drawable.velocity;
 
         self
     }
 
     fn down(&mut self) -> &mut Self {
-        self.drawable.location.height += self.move_speed;
+        self.drawable.location.height += self.drawable.velocity;
 
         self
     }
 
     fn left(&mut self) -> &mut Self {
-        self.drawable.location.width -= self.move_speed;
+        self.drawable.location.width -= self.drawable.velocity;
 
         self
     }
 
     fn right(&mut self) -> &mut Self {
-        self.drawable.location.width += self.move_speed;
+        self.drawable.location.width += self.drawable.velocity;
 
         self
     }
