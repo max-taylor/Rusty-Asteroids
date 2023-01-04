@@ -8,15 +8,16 @@ use crate::helpers::{
     get_is_position_outside_dimensions, get_is_position_outside_dimensions_with_offset,
 };
 use crate::systems::EntityController;
-use crate::user_display::HEART;
+use crate::user_display::{HEART, NUMBER_VECTOR};
 
 use super::element::{parse_str_to_element_array, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
+use super::{create_map, map_from_str, Element, Map, Point};
 use super::{display_controller_error::DisplayControllerError, Layout};
-use super::{Element, Point};
 
 pub struct DisplayController {
     entity_drawable_offset: Point<i64>,
     pub layout: Layout,
+    numbers: Vec<Map>,
 }
 
 type DisplayControllerResult<T> = Result<T, DisplayControllerError>;
@@ -41,10 +42,17 @@ impl DisplayController {
         dimensions: Point<i64>,
         entity_drawable_offset: Point<i64>,
     ) -> Result<Self, DisplayControllerError> {
+        let mut numbers: Vec<Map> = vec![create_map(&Default::default(), None); 10];
+
+        for idx in 0..9 {
+            numbers[idx] = map_from_str(NUMBER_VECTOR[idx], Color::Black);
+        }
+
         Ok(DisplayController {
             layout: Layout::new(&dimensions, None),
             // The offset is where all drawing will be done, this is the center of the terminal screen
             entity_drawable_offset,
+            numbers,
         })
     }
 
@@ -53,6 +61,17 @@ impl DisplayController {
         game_state: &GameState,
         lives: u32,
     ) -> DisplayControllerResult<&mut Self> {
+        let heart_map = map_from_str(HEART, Color::Red);
+
+        self.layout
+            .draw_map(&heart_map, Point::new(5, 2), &Default::default())?;
+
+        self.layout.draw_map(
+            &self.numbers[lives as usize],
+            Point::new(20, 2),
+            &Default::default(),
+        )?;
+
         // self.layout
         //     .draw_str(HEART, &Point::new(5, 2), None, Some(Color::Red))?;
 

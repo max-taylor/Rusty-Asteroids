@@ -4,6 +4,7 @@ use crate::helpers::get_is_position_outside_dimensions_with_offset;
 
 use super::{
     element::{parse_str_to_element_array, Element, DEFAULT_BACKGROUND},
+    map::{create_map, map_from_str, Map},
     DisplayControllerError, Point,
 };
 
@@ -21,8 +22,6 @@ pub fn collapse_twoDVec<T>(twoDVec: TwoDVec<T>) -> Vec<T> {
     return_vec
 }
 
-pub type Map = TwoDVec<Option<Element>>;
-
 #[derive(Debug, PartialEq)]
 pub struct Layout {
     /// A Map is a 2D vector, where the Vec<_> are rows and Vec<Vec<_>> are items in a row
@@ -36,10 +35,6 @@ type LayoutResult<T> = Result<T, DisplayControllerError>;
 pub enum Direction {
     Vertical,
     Horizontal,
-}
-
-pub fn create_map<T: Clone>(dimensions: &Point<i64>, default_item: T) -> Vec<Vec<T>> {
-    vec![vec![default_item; dimensions.width as usize]; dimensions.height as usize]
 }
 
 impl Layout {
@@ -72,18 +67,7 @@ impl Layout {
     }
 
     pub fn from_ascii(ascii: &str, color: Color) -> Self {
-        let rows = ascii.split("\n");
-
-        let width = rows.into_iter().max_by_key(|row| row.len()).unwrap().len();
-
-        let mut map: Vec<Vec<Option<Element>>> =
-            vec![vec![None; width as usize]; ascii.split("\n").count()];
-
-        for (index, row) in ascii.split("\n").enumerate() {
-            map[index] = parse_str_to_element_array(row, None, Some(color));
-        }
-
-        Layout::from_map(map, None)
+        Layout::from_map(map_from_str(ascii, color), None)
     }
 
     pub fn from_file(path: &str) -> Self {
@@ -140,13 +124,13 @@ impl Layout {
     ///
     /// * `map` - The map to draw
     /// * `location` - Location to draw it
-    /// * `drawable_offset` -
+    /// * `drawable_offset` - This is used to determine if the map is within the drawable area. When drawing game components this offset will be as large as the user's UI so that it doesn't draw items in the user UI
     pub fn draw_map(
         &mut self,
         map: &Map,
         location: Point<i64>,
         drawable_offset: &Point<i64>,
-    ) -> LayoutResult<(bool)> {
+    ) -> LayoutResult<bool> {
         let mut has_drawn_drawable = false;
 
         // Iterate over each row in the map
