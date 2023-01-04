@@ -1,7 +1,7 @@
 use crate::api::display::{Layout, Point};
 use uuid::Uuid;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct DrawableState {
     pub layout: Layout,
     pub location: Point<i64>,
@@ -16,7 +16,7 @@ pub enum DrawableType {
     Enemy,
     Border,
     // Damage of ammunition
-    Ammunition(i64),
+    Ammunition(u32),
 }
 
 impl DrawableState {

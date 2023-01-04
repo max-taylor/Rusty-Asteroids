@@ -5,9 +5,23 @@ use super::{
     DisplayControllerError, Point,
 };
 
-type Map = Vec<Vec<Option<Element>>>;
+pub type TwoDVec<T> = Vec<Vec<T>>;
 
-#[derive(Debug)]
+pub fn collapse_twoDVec<T>(twoDVec: TwoDVec<T>) -> Vec<T> {
+    let mut return_vec: Vec<T> = vec![];
+
+    for row in twoDVec {
+        for item in row {
+            return_vec.push(item);
+        }
+    }
+
+    return_vec
+}
+
+pub type Map = TwoDVec<Option<Element>>;
+
+#[derive(Debug, PartialEq)]
 pub struct Layout {
     /// A Map is a 2D vector, where the Vec<_> are rows and Vec<Vec<_>> are items in a row
     pub map: Map,

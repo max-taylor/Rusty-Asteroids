@@ -29,7 +29,7 @@ fn get_asteroid_spawn_location(dimensions: &Point<i64>) -> Point<i64> {
 
 fn get_asteroid_velocity() -> Point<i64> {
     Point {
-        width: get_random_in_range(0, 20),
+        width: get_random_in_range(-20, 20),
         height: get_random_in_range(1, 40),
     }
 }

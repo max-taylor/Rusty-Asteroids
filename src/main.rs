@@ -7,6 +7,7 @@ mod systems;
 
 use app::App;
 
+// Run tests with logging: cargo test -- --nocapture
 fn main() {
     // let dimensions: &Point<i64> = &Point {
     //     width: 60,

@@ -10,6 +10,8 @@ pub struct Bullet {
     pub drawable: DrawableState,
 }
 
+pub const BULLET_DAMAGE: u32 = 1;
+
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
 impl Bullet {
@@ -37,7 +39,7 @@ impl Bullet {
             drawable: DrawableState::new(
                 map,
                 location,
-                DrawableType::Ammunition(1),
+                DrawableType::Ammunition(BULLET_DAMAGE),
                 Some(velocity),
             ),
         }

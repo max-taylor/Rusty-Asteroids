@@ -20,16 +20,23 @@ trait CanSpawn {
 }
 
 impl Player {
-    pub fn new() -> Self {
-        let location = Point {
-            width: 5,
-            height: 5,
-        };
+    pub fn new(mut default_position: Option<Point<i64>>) -> Self {
+        if default_position.is_none() {
+            default_position = Some(Point {
+                width: 5,
+                height: 5,
+            });
+        }
 
         let layout = Layout::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: DrawableState::new(layout, location, DrawableType::Player, None),
+            drawable: DrawableState::new(
+                layout,
+                default_position.unwrap(),
+                DrawableType::Player,
+                None,
+            ),
             bullets: Default::default(),
         }
     }

@@ -44,8 +44,8 @@ impl App {
             game_state: GameState::new(),
             borders: Borders::new(&dimensions)?,
             output,
-            player: Player::new(),
-            asteroid_controller: AsteroidController::new(50, dimensions),
+            player: Player::new(None),
+            asteroid_controller: AsteroidController::new(500, dimensions),
             dimensions,
         })
     }
@@ -58,8 +58,6 @@ impl App {
 
         Ok(())
     }
-
-    // TODO trying to return an array of Vec<impl Drawables from the function that is executed
 
     pub fn run(&mut self) -> Result<(), DisplayControllerError> {
         self.start()?;
@@ -93,7 +91,8 @@ impl App {
 
                     self.update_positions(game_loop_duration);
 
-                    run_collision_detection(self.get_all_drawable_states(), &self.dimensions);
+                    let collision_results =
+                        run_collision_detection(self.get_all_drawable_states(), &self.dimensions);
 
                     self.draw_all_entities()?;
                 }
