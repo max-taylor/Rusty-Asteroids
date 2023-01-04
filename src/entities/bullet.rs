@@ -43,7 +43,7 @@ impl Bullet {
                 DrawableType::Ammunition(BULLET_DAMAGE),
                 Some(velocity),
             ),
-            health: 1,
+            health: 2,
         }
     }
 }

@@ -1,63 +1,61 @@
+use std::collections::HashMap;
+
 use uuid::Uuid;
 
 use crate::components::{Drawable, DrawableState, Health};
 
 pub struct EntityController<T: Drawable + Health> {
-    pub entities: Vec<T>,
+    entity_hashmap: HashMap<Uuid, T>,
 }
-
-// pub trait EntityControllerTrait<T: Drawable + Health> {
-//     fn new() -> Self;
-
-//     fn get_mut_drawable_array(&self) -> &mut Vec<T>;
-
-//     fn get_all_drawable_states(&self) -> Vec<&DrawableState>;
-
-//     fn spawn_entity(&mut self, entity: T) -> &mut Self;
-
-//     fn apply_entity_damage(&mut self, uuid: Uuid, damage: u32) -> &mut Self;
-// }
 
 impl<T: Drawable + Health> EntityController<T> {
     pub fn new() -> Self {
-        EntityController { entities: vec![] }
+        EntityController {
+            entity_hashmap: HashMap::new(),
+        }
     }
 
-    pub fn get_mut_drawable_array(&mut self) -> &mut Vec<T> {
-        &mut self.entities
+    pub fn has_entity(&self, uuid: Uuid) -> bool {
+        self.entity_hashmap.get(&uuid).is_some()
     }
 
     pub fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
-        self.entities
+        self.entity_hashmap
             .iter()
-            .map(|entity| entity.get_drawable_state())
+            .map(|(_, entity)| entity.get_drawable_state())
             .collect()
     }
 
     pub fn spawn_entity(&mut self, entity: T) -> &mut Self {
-        self.entities.push(entity);
+        self.entity_hashmap
+            .insert(entity.get_drawable_state().uuid, entity);
+
+        self
+    }
+
+    pub fn delete_entity(&mut self, uuid: Uuid) -> &mut Self {
+        self.entity_hashmap.remove(&uuid);
 
         self
     }
 
     pub fn apply_entity_damage(&mut self, uuid: Uuid, damage: u32) -> &mut Self {
-        let entity_index = self
-            .entities
-            .iter_mut()
-            .position(|entity| entity.get_drawable_state().uuid == uuid);
+        let entity = self.entity_hashmap.get_mut(&uuid);
 
-        if entity_index.is_none() {
-            return self;
+        if let Some(entity) = entity {
+            entity.apply_damage(damage);
+
+            if entity.get_health() == 0 {
+                self.delete_entity(uuid);
+            }
         }
 
-        let asteroid_index_2 = entity_index.unwrap();
+        self
+    }
 
-        // asteroid_index = asteroid_index.unwrap();
-
-        self.entities[asteroid_index_2].apply_damage(damage);
-
-        if self.entities[asteroid_index_2].get_health() == 0 {
-            self.entities.remove(asteroid_index_2);
+    pub fn update_entity_positions(&mut self, game_loop_duration: u128) -> &mut Self {
+        for (_, entity) in self.entity_hashmap.iter_mut() {
+            entity.update_position(None, game_loop_duration);
         }
 
         self

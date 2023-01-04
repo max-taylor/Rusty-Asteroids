@@ -1,4 +1,5 @@
 use crossterm::terminal::size;
+use uuid::Uuid;
 
 use crate::components::{Drawable, DrawableState, Health};
 use crate::helpers::get_is_position_outside_dimensions;
@@ -88,32 +89,24 @@ impl DisplayController {
         &mut self,
         entity_controller: &mut EntityController<T>,
     ) -> &mut Self {
-        entity_controller
-            .get_mut_drawable_array()
-            .retain(|drawable| {
-                let result = self.draw_drawable(drawable.get_drawable_state());
+        // Create an array of delete uuid's and iterate over them after we determine which ones are to be deleted. This is because we can't mutable use the entity_controller within the immutable iterator
+        let mut delete_uuids: Vec<Uuid> = vec![];
 
-                let (_, did_draw) = result.unwrap();
-
-                did_draw
-            });
-
-        self
-    }
-
-    pub fn draw_vec<'a>(
-        &mut self,
-        vec_array: &'a mut Vec<impl Drawable>,
-    ) -> &'a mut Vec<impl Drawable> {
-        vec_array.retain(|drawable| {
-            let result = self.draw_drawable(drawable.get_drawable_state());
+        for entity in entity_controller.get_all_drawable_states() {
+            let result = self.draw_drawable(entity);
 
             let (_, did_draw) = result.unwrap();
 
-            did_draw
-        });
+            if !did_draw {
+                delete_uuids.push(entity.uuid);
+            }
+        }
 
-        vec_array
+        for uuid in delete_uuids {
+            entity_controller.delete_entity(uuid);
+        }
+
+        self
     }
 }
 

@@ -39,15 +39,6 @@ impl DrawableState {
 
 const PADDING_OFFSET: i64 = 1;
 
-pub fn update_position_for_drawable_vec(
-    drawable_vec: &mut Vec<impl Drawable>,
-    game_loop_duration: u128,
-) {
-    drawable_vec.iter_mut().for_each(|drawable| {
-        drawable.update_position(None, game_loop_duration);
-    });
-}
-
 pub fn get_rated_velocity(velocity: Point<i64>, game_loop_duration: u128) -> Point<i64> {
     // RUST IS SO CLEAN, this seamless cast from i64 to point with .into();
     let rated_velocity = velocity * game_loop_duration.into() / (1000 as i64).into();

@@ -4,7 +4,7 @@ use crossterm::event::{poll, read, Event, KeyCode};
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
-    components::{update_position_for_drawable_vec, Drawable, DrawableState},
+    components::{Drawable, DrawableState, Health},
     entities::{Borders, Controller, Player},
     helpers::get_now,
     systems::{get_collision_summary, run_collision_detection, AsteroidController},
@@ -113,8 +113,27 @@ impl App {
         ));
 
         for (uuid, collision) in collision_results {
-            self.asteroid_controller
-                .apply_asteroid_damage(uuid, collision.damage);
+            if self
+                .asteroid_controller
+                .entity_controller
+                .has_entity(collision.uuid)
+            {
+                self.asteroid_controller
+                    .entity_controller
+                    .apply_entity_damage(uuid, collision.damage);
+            } else if self.player.bullet_entity_controller.has_entity(uuid) {
+                self.player
+                    .bullet_entity_controller
+                    .apply_entity_damage(uuid, collision.damage);
+            } else if self.player.drawable.uuid == uuid {
+                self.player.apply_damage(collision.damage);
+
+                if self.player.get_health() == 0 {
+                    panic!("DEAD CLOSING SCREEN");
+                }
+            } else {
+                panic!("UUID missing from all arrays");
+            }
         }
 
         self
@@ -124,15 +143,13 @@ impl App {
         self.player
             .update_position(Some(&self.dimensions), game_loop_duration);
 
-        update_position_for_drawable_vec(
-            &mut self.player.bullet_entity_controller.entities,
-            game_loop_duration,
-        );
+        self.player
+            .bullet_entity_controller
+            .update_entity_positions(game_loop_duration);
 
-        update_position_for_drawable_vec(
-            &mut self.asteroid_controller.asteroids,
-            game_loop_duration,
-        );
+        self.asteroid_controller
+            .entity_controller
+            .update_entity_positions(game_loop_duration);
 
         self
     }
@@ -140,8 +157,18 @@ impl App {
     fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
         let mut drawable_items: Vec<&DrawableState> = vec![self.player.get_drawable_state()];
 
-        drawable_items.append(&mut self.asteroid_controller.get_all_drawable_states());
-        drawable_items.append(&mut self.player.get_bullet_drawable_states());
+        drawable_items.append(
+            &mut self
+                .asteroid_controller
+                .entity_controller
+                .get_all_drawable_states(),
+        );
+        drawable_items.append(
+            &mut self
+                .player
+                .bullet_entity_controller
+                .get_all_drawable_states(),
+        );
 
         drawable_items
     }
@@ -154,14 +181,12 @@ impl App {
         self.display_controller
             .draw_drawable(&self.player.get_drawable_state())?;
 
+        // Draw all the entities in the bullet and asteroid controller
         self.display_controller
             .draw_entity_controller_items(&mut self.player.bullet_entity_controller);
 
-        // self.display_controller
-        //     .draw_entity_controller_items(&mut self.player.bullet_entity_controller);
-
         self.display_controller
-            .draw_vec(&mut self.asteroid_controller.asteroids);
+            .draw_entity_controller_items(&mut self.asteroid_controller.entity_controller);
 
         self.output.print_display(&self.display_controller.layout)?;
 

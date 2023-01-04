@@ -39,17 +39,9 @@ impl Player {
                 DrawableType::Player,
                 None,
             ),
-            health: 100,
+            health: 2,
             bullet_entity_controller: EntityController::new(),
         }
-    }
-
-    pub fn get_bullet_drawable_states(&self) -> Vec<&DrawableState> {
-        self.bullet_entity_controller.get_all_drawable_states()
-    }
-
-    pub fn apply_bullet_damage(&mut self) -> &mut Self {
-        self
     }
 }
 
