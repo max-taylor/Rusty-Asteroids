@@ -19,12 +19,14 @@ pub struct App<'dimensions> {
 
 impl<'dimensions> App<'dimensions> {
     pub fn new(dimensions: Point) -> Result<(), DisplayControllerError> {
-        enable_raw_mode().map_err(DisplayControllerError::from_crossterm_error);
+        enable_raw_mode().map_err(DisplayControllerError::from_crossterm_error)?;
 
-        let mut display_controller = DisplayController::new(&dimensions);
+        let player = Player::new();
+
+        let display_controller = DisplayController::new(&dimensions);
 
         if let Some(error) = display_controller.as_ref().err() {
-            DisplayController::close(&mut stdout());
+            DisplayController::close(&mut stdout())?;
 
             return Err(error.clone());
         }
@@ -46,7 +48,7 @@ impl<'dimensions> App<'dimensions> {
             let event = read().unwrap();
 
             if event == Event::Key(KeyCode::Esc.into()) {
-                DisplayController::close(&mut self.display_controller.target);
+                DisplayController::close(&mut self.display_controller.target).unwrap();
 
                 break;
             }

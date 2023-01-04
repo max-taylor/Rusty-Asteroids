@@ -65,7 +65,12 @@ impl<'dimensions> DisplayController<'dimensions> {
 
         dbg!(controller.offset);
 
-        controller.setup().draw_borders()?.print_display()?.flush();
+        controller
+            .setup()
+            .draw_borders()?
+            .print_display()?
+            // .print_display()?
+            .flush();
 
         Ok(controller)
     }
@@ -171,7 +176,7 @@ impl<'dimensions> DisplayController<'dimensions> {
         if let Some(existing_item) = row[updated_positions.x as usize].as_mut() {
             *existing_item = element;
         } else {
-            row.insert(updated_positions.x as usize, Some(element));
+            row[updated_positions.x as usize] = Some(element);
         }
 
         Ok(self)
