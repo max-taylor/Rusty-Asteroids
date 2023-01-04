@@ -4,7 +4,6 @@ use rand::Rng;
 pub struct AsteroidController {
     pub asteroids: Vec<Asteroid>,
     pub spawn_rate: u128,
-    last_spawn: u128,
     // Storing this in the struct, so that the game_loop_duration can be provided each loop, this prevents fetching the system time each loop and we already have the game_loop_duration
     time_elapsed_since_spawn: u128,
     dimensions: Point<i64>,
@@ -29,7 +28,6 @@ impl AsteroidController {
         Self {
             asteroids: vec![],
             spawn_rate,
-            last_spawn: get_now(),
             time_elapsed_since_spawn: 0,
             dimensions,
         }
@@ -38,7 +36,8 @@ impl AsteroidController {
     pub fn handle_game_loop(&mut self, game_loop_duration: u128) -> &mut Self {
         self.time_elapsed_since_spawn += game_loop_duration;
 
-        if self.time_elapsed_since_spawn > self.last_spawn + self.spawn_rate {
+        if self.time_elapsed_since_spawn > self.spawn_rate {
+            self.time_elapsed_since_spawn = 0;
             self.asteroids
                 .push(Asteroid::new(get_asteroid_spawn_location(&self.dimensions)));
         }

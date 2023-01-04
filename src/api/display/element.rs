@@ -20,12 +20,19 @@ impl Default for Element {
     }
 }
 
-pub fn parse_str_to_element_array(string_array: &str) -> Vec<Option<Element>> {
+pub fn parse_str_to_element_array(
+    string_array: &str,
+    background: Option<Color>,
+    foreground: Option<Color>,
+) -> Vec<Option<Element>> {
+    let background = background.unwrap_or(DEFAULT_BACKGROUND);
+    let foreground = foreground.unwrap_or(DEFAULT_FOREGROUND);
+
     let mut array = vec![None; string_array.len()];
 
     for (index, character) in string_array.chars().enumerate() {
         if character != ' ' {
-            array[index] = Some(Element::new_default_colors(character));
+            array[index] = Some(Element::new(character, background, foreground));
         }
     }
 

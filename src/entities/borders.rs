@@ -1,5 +1,7 @@
+use crossterm::style::Color;
+
 use crate::{
-    api::display::{DisplayControllerError, Element, Layout, Point},
+    api::display::{element::DEFAULT_BACKGROUND, DisplayControllerError, Element, Layout, Point},
     components::{Drawable, DrawableState, DrawableType},
 };
 
@@ -20,7 +22,7 @@ impl Borders {
         drawable.layout.draw_rect(
             &Default::default(),
             dimensions,
-            Element::new_default_colors('x'),
+            Element::new('x', DEFAULT_BACKGROUND, Color::Red),
         )?;
 
         Ok(Self { drawable })

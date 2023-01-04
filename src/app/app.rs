@@ -5,7 +5,7 @@ use crossterm::event::{poll, read, Event, KeyCode};
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
     components::Drawable,
-    entities::{Asteroid, Borders, Bullet, Controller, Player},
+    entities::{Borders, Controller, Player},
     helpers::get_now,
     systems::AsteroidController,
 };
@@ -26,7 +26,6 @@ const SPAWN_GAME_LOOPS: i64 = 5;
 
 impl App {
     pub fn new(dimensions: Option<&Point<i64>>) -> Result<App, DisplayControllerError> {
-        dbg!(dimensions);
         let mut output = Output::new(stdout());
 
         let display_controller = DisplayController::new(dimensions);
@@ -46,7 +45,7 @@ impl App {
             borders: Borders::new(&dimensions)?,
             output,
             player: Player::new(),
-            asteroid_controller: AsteroidController::new(1000, dimensions),
+            asteroid_controller: AsteroidController::new(500, dimensions),
             dimensions,
         })
     }
@@ -70,7 +69,7 @@ impl App {
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
                 while self.game_state.is_running() {
-                    // let game_loop_start = get_now();
+                    let game_loop_start = get_now();
                     self.reset()?;
 
                     if poll(Duration::from_millis(100))? {
@@ -88,9 +87,10 @@ impl App {
                         self.player.handle_event(&event);
                     }
 
-                    // let game_loop_duration = get_now() - game_loop_start;
-                    // self.asteroid_controller
-                    // .handle_game_loop(game_loop_duration);
+                    let game_loop_duration = get_now() - game_loop_start;
+
+                    self.asteroid_controller
+                        .handle_game_loop(game_loop_duration);
 
                     self.update_positions().draw_all_entities()?;
 
@@ -112,29 +112,14 @@ impl App {
             bullet.update_position(None);
         });
 
-        // self.asteroid_controller
-        //     .asteroids
-        //     .iter_mut()
-        //     .for_each(|asteroid| {
-        //         asteroid.update_position(None);
-        //     });
+        self.asteroid_controller
+            .asteroids
+            .iter_mut()
+            .for_each(|asteroid| {
+                asteroid.update_position(None);
+            });
 
         self
-    }
-
-    pub fn draw_vec<'a>(
-        display_controller: &'a mut DisplayController,
-        vec_array: &'a mut Vec<impl Drawable>,
-    ) -> &'a mut Vec<impl Drawable> {
-        vec_array.retain(|drawable| {
-            let result = display_controller.draw_drawable(drawable);
-
-            let (_, did_draw) = result.unwrap();
-
-            did_draw
-        });
-
-        vec_array
     }
 
     /// Method to handle drawing all the entities that will be rendered
@@ -143,15 +128,11 @@ impl App {
         self.display_controller.draw_drawable(&self.borders)?;
         self.display_controller.draw_drawable(&self.player)?;
 
-        App::draw_vec(
-            &mut self.display_controller,
-            &mut self.player.bullets.entities,
-        );
+        self.display_controller
+            .draw_vec(&mut self.player.bullets.entities);
 
-        // App::draw_vec(
-        //     &mut self.display_controller,
-        //     &mut self.asteroid_controller.asteroids,
-        // );
+        self.display_controller
+            .draw_vec(&mut self.asteroid_controller.asteroids);
 
         Ok(self)
     }

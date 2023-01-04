@@ -81,6 +81,21 @@ impl DisplayController {
 
         Ok((self, has_drawn_drawable))
     }
+
+    pub fn draw_vec<'a>(
+        &mut self,
+        vec_array: &'a mut Vec<impl Drawable>,
+    ) -> &'a mut Vec<impl Drawable> {
+        vec_array.retain(|drawable| {
+            let result = self.draw_drawable(drawable);
+
+            let (_, did_draw) = result.unwrap();
+
+            did_draw
+        });
+
+        vec_array
+    }
 }
 
 #[cfg(test)]

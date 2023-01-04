@@ -58,7 +58,7 @@ impl Layout {
             vec![vec![None; width as usize]; ascii.split("\n").count()];
 
         for (index, row) in ascii.split("\n").enumerate() {
-            map[index] = parse_str_to_element_array(row);
+            map[index] = parse_str_to_element_array(row, None, Some(Color::DarkCyan));
         }
 
         Layout::from_map(map, None)
