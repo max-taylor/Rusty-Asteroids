@@ -1,3 +1,5 @@
+use crossterm::style::Color;
+
 use crate::{
     api::display::{
         element::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
@@ -5,6 +7,8 @@ use crate::{
     },
     components::{get_updated_health, Drawable, DrawableState, DrawableType, Health},
 };
+
+use super::consts::{BASIC_BULLET, SPREAD_BULLET};
 
 pub struct Bullet {
     pub drawable: DrawableState,
@@ -16,20 +20,8 @@ pub const BULLET_DAMAGE: u32 = 1;
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
 impl Bullet {
-    pub fn new(location: Point<i64>) -> Self {
-        let asteroid: Vec<Vec<Option<Element>>> = [
-            [None, Some(ARROW_ELEMENT), None],
-            [None, Some(ARROW_ELEMENT), None],
-            [
-                Some(ARROW_ELEMENT),
-                Some(ARROW_ELEMENT),
-                Some(ARROW_ELEMENT),
-            ],
-        ]
-        .map(|row| row.to_vec())
-        .to_vec();
-
-        let map = Layout::from_map(asteroid, Some(ARROW_ELEMENT));
+    pub fn build_basic_bullet(location: Point<i64>) -> Self {
+        let map = Layout::from_ascii(BASIC_BULLET, Color::White);
 
         let velocity: Point<i64> = Point {
             height: -20,
@@ -43,7 +35,26 @@ impl Bullet {
                 DrawableType::Ammunition(BULLET_DAMAGE),
                 Some(velocity),
             ),
-            health: 2,
+            health: 1,
+        }
+    }
+
+    pub fn build_spread_bullet(location: Point<i64>) -> Self {
+        let map = Layout::from_ascii(SPREAD_BULLET, Color::White);
+
+        let velocity: Point<i64> = Point {
+            height: -20,
+            width: 0,
+        };
+
+        Self {
+            drawable: DrawableState::new(
+                map,
+                location,
+                DrawableType::Ammunition(BULLET_DAMAGE),
+                Some(velocity),
+            ),
+            health: 5,
         }
     }
 }

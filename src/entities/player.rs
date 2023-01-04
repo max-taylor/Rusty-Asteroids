@@ -43,6 +43,12 @@ impl Player {
             bullet_entity_controller: EntityController::new(),
         }
     }
+
+    fn get_center_of_player(&self) -> Point<i64> {
+        self.drawable
+            .location
+            .add_width(self.drawable.layout.dimensions.width / 2)
+    }
 }
 
 impl Drawable for Player {
@@ -83,15 +89,16 @@ impl Controller for Player {
     }
 
     fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
-        if event == &create_event(KeyCode::Enter) {
-            let spawn_position = self
-                .drawable
-                .location
-                .add_width(self.drawable.layout.dimensions.width / 2 - 1)
-                .add_height(1);
-
+        if event == &create_event(KeyCode::Char(' ')) {
             self.bullet_entity_controller
-                .spawn_entity(Bullet::new(spawn_position));
+                .spawn_entity(Bullet::build_basic_bullet(
+                    self.get_center_of_player().add_height(1),
+                ));
+        } else if event == &create_event(KeyCode::Enter) {
+            self.bullet_entity_controller
+                .spawn_entity(Bullet::build_spread_bullet(
+                    self.get_center_of_player().sub_width(4),
+                ));
         }
 
         self

@@ -111,7 +111,6 @@ pub fn run_collision_detection(
     for elements_on_position in positions_with_overlaps {
         // Single out all the enemies, so that if there is a player or ammunition on the position we can apply affects
         let mut enemies: Vec<&MinimalDrawableDetails> = vec![];
-
         for element in &elements_on_position {
             match element.drawable_type {
                 DrawableType::Enemy(..) => {

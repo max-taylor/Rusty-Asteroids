@@ -129,7 +129,7 @@ impl App {
                 self.player.apply_damage(collision.damage);
 
                 if self.player.get_health() == 0 {
-                    panic!("DEAD CLOSING SCREEN");
+                    // panic!("DEAD CLOSING SCREEN");
                 }
             } else {
                 panic!("UUID missing from all arrays");
