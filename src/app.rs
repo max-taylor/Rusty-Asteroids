@@ -11,8 +11,8 @@ use crate::{
 };
 
 pub struct App<'dimensions> {
-    display_controller: DisplayController<'dimensions>,
     player: Player,
+    display_controller: DisplayController<'dimensions>, // position_controller: PositionController<'dimensions, 'position_controller>,
 }
 
 impl<'dimensions> App<'dimensions> {
@@ -20,11 +20,11 @@ impl<'dimensions> App<'dimensions> {
         enable_raw_mode()?;
 
         let mut display_controller = DisplayController::new(&dimensions);
-        let position_controller = PositionController::new(vec![], &mut display_controller);
+        // let position_controller = PositionController::new(vec![], &mut display_controller);
 
         let mut app = App {
             player: Player::new(),
-            display_controller,
+            display_controller, // position_controller,
         };
 
         app.setup_listeners();

@@ -17,6 +17,7 @@ use super::{
 pub struct DisplayController<'dimensions> {
     dimensions: &'dimensions Point,
     display: Map<'dimensions>,
+    default_element: Element,
     target: io::Stdout,
 }
 
@@ -31,7 +32,7 @@ pub enum Direction {
     Horizontal,
 }
 
-const BORDER_ELEMENT: Element = Element::from('x', Color::Black, Color::Black);
+const BORDER_ELEMENT: Element = Element::new('x', Color::Black, Color::Black);
 const PADDING: Point = Point::new(10, 10);
 
 impl<'dimensions> DisplayController<'dimensions> {
@@ -53,12 +54,10 @@ impl<'dimensions> DisplayController<'dimensions> {
             display: Map::new(&dimensions),
             target: stdout(),
             dimensions: &dimensions,
+            default_element: Element::default(),
         };
 
-        controller.setup().draw_borders().draw_display().flush();
-
-        // Publish all queued writes
-        controller.target.flush().unwrap();
+        controller.setup().draw_borders().update_display().flush();
 
         controller
     }
@@ -67,7 +66,7 @@ impl<'dimensions> DisplayController<'dimensions> {
         self.draw_rect(
             &Point::new(0, 0),
             self.dimensions,
-            Element::from('x', Color::Blue, Color::Green),
+            Element::new('x', Color::Blue, Color::Green),
         )
     }
 
@@ -147,13 +146,14 @@ impl<'dimensions> DisplayController<'dimensions> {
                 Direction::Vertical => start_position.addY(position_change),
             };
 
-            self.draw_item(&new_position, element);
+            self.draw_item(element, Some(&new_position));
         }
 
         self
     }
 
-    fn draw_item(&mut self, position: &Point, element: &Element) -> &mut Self {
+    fn draw_item(&mut self, element: &Element, move_to: Option<&Point>) -> &mut Self {
+        self
         // if position.x > self.dimensions.x || position.y > self.dimensions.y {
         //     panic!("Out of range requested");
         // }
@@ -172,38 +172,47 @@ impl<'dimensions> DisplayController<'dimensions> {
 
         // // Dereference the value so we assign to it
         // *existing_item = element;
-
-        // queue!(
-        //     self.target,
-        //     MoveTo::from(&(*position + PADDING)),
-        //     Print(element.value)
-        // )
-        // .unwrap();
-
-        self
     }
 
-    pub fn draw_display(&mut self) -> &mut Self {
+    pub fn update_display(&mut self) -> &mut Self {
         self.reset_cursor();
 
         for row in self.display.map.iter() {
             for element in row.iter() {
                 match element {
                     Some(element) => {
-                        queue!(
-                            self.target,
-                            SetForegroundColor(element.foreground),
-                            SetBackgroundColor(element.background),
-                            Print(element.value)
-                        )
-                        .unwrap();
+                        DisplayController::update_element(&mut self.target, element, None);
                     }
-                    None => {}
+                    None => {
+                        DisplayController::update_element(
+                            &mut self.target,
+                            &self.default_element,
+                            None,
+                        );
+                    }
                 }
             }
         }
 
         self
+    }
+
+    pub fn update_element(target: &mut io::Stdout, element: &Element, move_to: Option<&Point>) {
+        if let Some(move_to_destination) = move_to {
+            queue!(
+                target,
+                MoveTo(move_to_destination.x as u16, move_to_destination.y as u16)
+            )
+            .unwrap();
+        };
+
+        queue!(
+            target,
+            SetForegroundColor(element.foreground),
+            SetBackgroundColor(element.background),
+            Print(element.value)
+        )
+        .unwrap();
     }
 
     pub fn close(&mut self) {

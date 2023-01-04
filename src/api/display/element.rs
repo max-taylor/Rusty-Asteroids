@@ -10,16 +10,18 @@ pub struct Element {
     pub foreground: Color,
 }
 
-impl Element {
-    pub fn new() -> Self {
+impl Default for Element {
+    fn default() -> Self {
         Self {
-            value: ' ',
+            value: Default::default(),
             background: DEFAULT_BACKGROUND,
             foreground: DEFAULT_FOREGROUND,
         }
     }
+}
 
-    pub const fn from(value: char, background: Color, foreground: Color) -> Self {
+impl Element {
+    pub const fn new(value: char, background: Color, foreground: Color) -> Self {
         Self {
             value,
             background,
