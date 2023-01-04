@@ -1,19 +1,32 @@
+use crossterm::style::Color;
 use crossterm::terminal::size;
 use uuid::Uuid;
 
+use crate::app::GameState;
 use crate::components::{Drawable, DrawableState, Health};
-use crate::helpers::get_is_position_outside_dimensions;
+use crate::helpers::{
+    get_is_position_outside_dimensions, get_is_position_outside_dimensions_with_offset,
+};
 use crate::systems::EntityController;
 
-use super::Point;
+use super::element::{parse_str_to_element_array, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use super::{display_controller_error::DisplayControllerError, Layout};
+use super::{Element, Point};
 
 pub struct DisplayController {
-    offset: Point<i64>,
+    entity_drawable_offset: Point<i64>,
     pub layout: Layout,
 }
 
 type DisplayControllerResult<T> = Result<T, DisplayControllerError>;
+
+pub fn get_screen_size() -> Point<i64> {
+    let (rows, columns) = size().unwrap();
+
+    Point::new(rows as i64, columns as i64)
+}
+
+const LIFE_ELEMENT: Element = Element::new('♥', DEFAULT_BACKGROUND, Color::Red);
 
 impl DisplayController {
     /// Creates a new display controller, a display controller fills the entire screen but the provided dimensions will be the controllable area
@@ -23,31 +36,36 @@ impl DisplayController {
     /// * `dimensions` - The controllable area, if None then the entire screen is used
     ///
     /// ```
-    pub fn new(dimensions: Option<&Point<i64>>) -> Result<Self, DisplayControllerError> {
-        let (rows, columns) = size().unwrap();
-
-        let screen_size = &Point::new(rows as i64, columns as i64);
-
-        let (dimensions, offset) = match dimensions {
-            Some(dimensions) => {
-                if dimensions.height > columns.into() || dimensions.width > rows.into() {
-                    return Err(DisplayControllerError::DisplayTooSmallForDimensions);
-                }
-                // The offset is
-                let offset = (*screen_size - *dimensions) / (2 as i64).into();
-
-                (dimensions, offset)
-            }
-            // If no dimensions provided use the screen_size and set a 0,0 offset
-            None => (screen_size, Default::default()),
-            // None => (screen_size, Point::new(0, 10)),
-        };
-
+    pub fn new(
+        dimensions: Point<i64>,
+        entity_drawable_offset: Point<i64>,
+    ) -> Result<Self, DisplayControllerError> {
         Ok(DisplayController {
             layout: Layout::new(&dimensions, None),
             // The offset is where all drawing will be done, this is the center of the terminal screen
-            offset,
+            entity_drawable_offset,
         })
+    }
+
+    pub fn draw_game_state(
+        &mut self,
+        game_state: &GameState,
+        lives: u32,
+    ) -> DisplayControllerResult<&mut Self> {
+        let life_elements = vec![Some(LIFE_ELEMENT); lives as usize];
+
+        self.layout
+            .draw_element_array(life_elements, &Point::new(0, 2))?;
+
+        // Convert the score string into an array of elements for simple printing to the display
+        let score_array = parse_str_to_element_array(&game_state.score.to_string(), None, None);
+
+        self.layout.draw_element_array(
+            score_array,
+            &Point::new(self.layout.dimensions.width - 5, 2),
+        )?;
+
+        Ok(self)
     }
 
     /// This method handles drawing drawable elements, it also skips over the drawing of an element if it is outside the range
@@ -55,7 +73,7 @@ impl DisplayController {
         &mut self,
         drawable_state: &DrawableState,
     ) -> DisplayControllerResult<(&mut Self, bool)> {
-        let base_location = drawable_state.location + self.offset;
+        let base_location = drawable_state.location + self.entity_drawable_offset;
         let mut has_drawn_drawable = false;
         // Iterate over each row in the map
         for (num_row, drawable_row) in drawable_state.layout.map.iter().enumerate() {
@@ -67,9 +85,10 @@ impl DisplayController {
                         .add_height(num_row as i64);
 
                     // Check if position is outside of dimension range
-                    if get_is_position_outside_dimensions(
+                    if get_is_position_outside_dimensions_with_offset(
                         &self.layout.dimensions,
                         &updated_position,
+                        &self.entity_drawable_offset,
                     ) {
                         continue;
                     }
@@ -114,7 +133,7 @@ impl DisplayController {
 #[cfg(test)]
 mod tests {
     use crate::{
-        api::display::{Element, Layout, Point},
+        api::display::{display_controller::get_screen_size, Element, Layout, Point},
         components::{Drawable, DrawableState, DrawableType},
     };
 
@@ -154,7 +173,8 @@ mod tests {
     #[test]
     fn it_can_handle_drawable_outside_dimensions() {
         // let drawable = Drawable::
-        let mut display_controller = DisplayController::new(None).unwrap();
+        let mut display_controller =
+            DisplayController::new(get_screen_size(), Default::default()).unwrap();
 
         let result = display_controller.draw_drawable(&MockDrawble::new().get_drawable_state());
 

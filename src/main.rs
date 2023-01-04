@@ -14,7 +14,7 @@ fn main() {
     //     height: 40,
     // };
 
-    let mut app = App::new(None).unwrap();
+    let mut app = App::new().unwrap();
 
     let val = app.run();
     dbg!(val);

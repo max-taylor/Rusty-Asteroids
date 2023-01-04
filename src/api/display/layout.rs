@@ -271,6 +271,22 @@ impl Layout {
         Ok(self)
     }
 
+    pub fn draw_element_array(
+        &mut self,
+        elements: Vec<Option<Element>>,
+        position: &Point<i64>,
+    ) -> Result<&mut Self, DisplayControllerError> {
+        for (index, element) in elements.iter().enumerate() {
+            let element_position = &position.add_width(index as i64);
+
+            if let Some(element) = element {
+                self.draw_item(*element, element_position)?;
+            }
+        }
+
+        Ok(self)
+    }
+
     pub fn draw_item(
         &mut self,
         element: Element,

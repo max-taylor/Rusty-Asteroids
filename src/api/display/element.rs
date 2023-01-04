@@ -65,3 +65,9 @@ impl Element {
         }
     }
 }
+
+impl From<u32> for Element {
+    fn from(_: u32) -> Self {
+        todo!();
+    }
+}

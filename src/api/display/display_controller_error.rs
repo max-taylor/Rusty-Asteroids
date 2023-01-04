@@ -4,11 +4,9 @@ use crossterm::ErrorKind;
 
 #[derive(Debug, Clone, Copy)]
 pub enum DisplayControllerError {
-    DisplayTooSmallForDimensions,
     PositionOutOfRange,
     CrossTermWriteError,
     CasteError(Error),
-    Shutdown,
 }
 
 impl DisplayControllerError {

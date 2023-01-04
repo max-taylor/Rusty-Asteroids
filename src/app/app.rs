@@ -1,19 +1,19 @@
 use std::{io::stdout, panic, time::Duration};
 
-use crossterm::{
-    event::{poll, read, Event, KeyCode},
-    terminal::size,
-};
+use crossterm::event::{poll, read, Event, KeyCode};
 
 use crate::{
-    api::display::{DisplayController, DisplayControllerError, Output, Point},
+    api::display::{get_screen_size, DisplayController, Output, Point},
     components::{Drawable, DrawableState, Health},
     entities::{Borders, Controller, Player},
     helpers::get_now,
     systems::{get_collision_summary, run_collision_detection, AsteroidController},
 };
 
-use super::game_state::{GameState, ASTEROID_DESTROYED_POINTS};
+use super::{
+    app_errors::AppError,
+    game_state::{GameState, ASTEROID_DESTROYED_POINTS},
+};
 
 pub struct App {
     display_controller: DisplayController,
@@ -25,52 +25,49 @@ pub struct App {
     dimensions: Point<i64>,
 }
 
-const HUD_HEIGHT: u32 = 10;
+const HUD_HEIGHT: i64 = 5;
+
+pub type AppResult<T> = Result<T, AppError>;
 
 impl App {
-    pub fn new(dimensions: Option<&Point<i64>>) -> Result<App, DisplayControllerError> {
+    pub fn new() -> AppResult<App> {
         let mut output = Output::new(stdout());
 
-        // let (rows, columns) = size().unwrap();
+        let screen_size = get_screen_size();
 
-        // let game_display_height = columns - (HUD_HEIGHT as u16);
+        let game_screen_size = screen_size.sub_height(HUD_HEIGHT);
 
-        // let game_dimensions = &Point::new(rows as i64, game_display_height as i64);
+        let game_display_controller =
+            DisplayController::new(screen_size, Point::new(0, HUD_HEIGHT));
 
-        let display_controller = DisplayController::new(dimensions);
-
-        if let Some(error) = display_controller.as_ref().err() {
+        if let Some(error) = game_display_controller.as_ref().err() {
             output.close()?;
 
-            return Err(error.clone());
+            return Err(AppError::DisplayControllerError(error.clone()));
         }
 
-        let game_display_controller = display_controller.unwrap();
-
-        let dimensions = game_display_controller.layout.dimensions;
+        let game_display_controller = game_display_controller.unwrap();
 
         Ok(App {
             display_controller: game_display_controller,
             game_state: GameState::new(),
-            borders: Borders::new(&dimensions)?,
+            borders: Borders::new(&game_screen_size)?,
             output,
             player: Player::new(None),
-            asteroid_controller: AsteroidController::new(100, dimensions),
-            dimensions,
+            asteroid_controller: AsteroidController::new(100, game_screen_size),
+            dimensions: screen_size,
         })
     }
 
     /// Reset method to be called at the start of each loop
-    fn reset(&mut self) -> Result<(), DisplayControllerError> {
+    fn reset(&mut self) {
         self.game_state.keyboard_event = None;
 
         self.display_controller.layout.reset();
-
-        Ok(())
     }
 
     /// Process the keyboard events, also returns true if the user closes the game with escape
-    fn handle_keyboard(&mut self) -> Result<bool, DisplayControllerError> {
+    fn handle_keyboard(&mut self) -> AppResult<bool> {
         // Handle keyboard presses
         if poll(Duration::from_millis(100))? {
             let event = read()?;
@@ -89,42 +86,45 @@ impl App {
         Ok(false)
     }
 
-    pub fn run(&mut self) -> Result<(), DisplayControllerError> {
+    pub fn run(&mut self) -> AppResult<()> {
         self.start()?;
 
         // Simple "try-catch" wrapper to catch panic's so we can safely shutdown the display
-        let result = panic::catch_unwind(panic::AssertUnwindSafe(
-            || -> Result<(), DisplayControllerError> {
-                while self.game_state.is_running() {
-                    let game_loop_start = get_now();
-                    self.reset()?;
+        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| -> AppResult<()> {
+            while self.game_state.is_running() {
+                let game_loop_start = get_now();
+                self.reset();
 
-                    let shutdown = self.handle_keyboard()?;
-                    if shutdown {
-                        break;
-                    }
-
-                    let game_loop_duration = get_now() - game_loop_start;
-
-                    self.asteroid_controller
-                        .handle_game_loop(game_loop_duration);
-
-                    self.update_positions(game_loop_duration);
-
-                    self.handle_collisions();
-
-                    self.draw_all_entities()?;
+                let shutdown = self.handle_keyboard()?;
+                if shutdown {
+                    break;
                 }
-                Ok(())
-            },
-        ));
+
+                let game_loop_duration = get_now() - game_loop_start;
+
+                self.asteroid_controller
+                    .handle_game_loop(game_loop_duration);
+
+                self.update_positions(game_loop_duration);
+
+                self.handle_collisions();
+
+                self.draw_all_entities()?;
+            }
+            Ok(())
+        }));
 
         self.shut_down()?;
+        dbg!("BEFORE");
+        dbg!(result.as_ref().err());
 
-        result.unwrap()
+        let unwrap = result.unwrap();
+
+        // dbg!(unwrap);
+        unwrap
     }
 
-    fn handle_collisions(&mut self) -> &mut Self {
+    fn handle_collisions(&mut self) -> AppResult<&mut Self> {
         let collision_results = get_collision_summary(run_collision_detection(
             self.get_all_drawable_states(),
             &self.dimensions,
@@ -155,14 +155,15 @@ impl App {
                 self.player.apply_damage(collision.damage);
 
                 if self.player.get_health() == 0 {
-                    // panic!("DEAD CLOSING SCREEN");
+                    return Err(AppError::OutOfLives);
                 }
             } else {
+                // Use a lazy panic here because this shouldn't happen
                 panic!("UUID missing from all arrays");
             }
         }
 
-        self
+        Ok(self)
     }
 
     fn update_positions(&mut self, game_loop_duration: u128) -> &mut Self {
@@ -200,7 +201,7 @@ impl App {
     }
 
     /// Method to handle drawing all the entities that will be rendered
-    fn draw_all_entities(&mut self) -> Result<&mut Self, DisplayControllerError> {
+    fn draw_all_entities(&mut self) -> AppResult<&mut Self> {
         self.display_controller
             .draw_drawable(&self.borders.get_drawable_state())?;
 
@@ -214,19 +215,22 @@ impl App {
         self.display_controller
             .draw_entity_controller_items(&mut self.asteroid_controller.entity_controller);
 
+        self.display_controller
+            .draw_game_state(&self.game_state, self.player.get_health())?;
+
         self.output.print_display(&self.display_controller.layout)?;
 
         Ok(self)
     }
 
-    pub fn start(&mut self) -> Result<(), DisplayControllerError> {
+    pub fn start(&mut self) -> AppResult<()> {
         self.game_state.start_game();
         self.output.start()?;
 
         Ok(())
     }
 
-    pub fn shut_down(&mut self) -> Result<(), DisplayControllerError> {
+    pub fn shut_down(&mut self) -> AppResult<()> {
         self.output.close()?;
 
         Ok(())

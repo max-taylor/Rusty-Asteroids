@@ -5,7 +5,7 @@ mod layout;
 mod output;
 mod point;
 
-pub use display_controller::DisplayController;
+pub use display_controller::*;
 pub use display_controller_error::DisplayControllerError;
 pub use element::Element;
 pub use layout::*;

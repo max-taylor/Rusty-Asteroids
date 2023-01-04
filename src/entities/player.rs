@@ -39,7 +39,7 @@ impl Player {
                 DrawableType::Player,
                 None,
             ),
-            health: 5,
+            health: 1,
             bullet_entity_controller: EntityController::new(),
         }
     }
