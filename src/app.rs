@@ -19,8 +19,8 @@ impl<'dimensions> App<'dimensions> {
     pub fn new(dimensions: Point) -> Result<()> {
         enable_raw_mode()?;
 
-        let display_controller = DisplayController::new(dimensions);
-        let position_controller = PositionController::new(vec![], display_controller);
+        let mut display_controller = DisplayController::new(&dimensions);
+        let position_controller = PositionController::new(vec![], &mut display_controller);
 
         let mut app = App {
             player: Player::new(),

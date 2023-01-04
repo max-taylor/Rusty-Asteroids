@@ -42,7 +42,7 @@ impl<'dimensions> DisplayController<'dimensions> {
     /// * `dimensions` - The controllable area
     ///
     /// ```
-    pub fn new(dimensions: Point) -> Self {
+    pub fn new(dimensions: &'dimensions Point) -> Self {
         let (columns, rows) = size().unwrap();
 
         if dimensions.x > rows.into() || dimensions.y > columns.into() {
