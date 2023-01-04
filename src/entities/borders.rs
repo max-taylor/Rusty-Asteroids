@@ -31,4 +31,10 @@ impl Drawable for Borders {
     fn get_drawable_state(&self) -> &DrawableState {
         &self.drawable
     }
+
+    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
+        self.drawable.location = updated_position;
+
+        self
+    }
 }

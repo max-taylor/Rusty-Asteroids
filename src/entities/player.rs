@@ -32,6 +32,12 @@ impl Drawable for Player {
     fn get_drawable_state(&self) -> &DrawableState {
         &self.drawable
     }
+
+    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
+        self.drawable.location = updated_position;
+
+        self
+    }
 }
 
 impl Controller for Player {
@@ -60,6 +66,8 @@ impl Controller for Player {
     }
 
     fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
+        self.drawable.velocity = Default::default();
+
         if event == &create_event(KeyCode::Enter) {
             // Spawn bullet
         }

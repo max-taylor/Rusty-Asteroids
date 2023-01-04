@@ -1,3 +1,5 @@
+use std::fmt::Error;
+
 use crossterm::ErrorKind;
 
 #[derive(Debug, Clone, Copy)]
@@ -5,6 +7,7 @@ pub enum DisplayControllerError {
     DisplayTooSmallForDimensions,
     PositionOutOfRange,
     CrossTermWriteError,
+    CasteError(Error),
 }
 
 impl DisplayControllerError {
@@ -16,5 +19,11 @@ impl DisplayControllerError {
 impl From<ErrorKind> for DisplayControllerError {
     fn from(_: ErrorKind) -> Self {
         Self::CrossTermWriteError
+    }
+}
+
+impl From<Error> for DisplayControllerError {
+    fn from(error: Error) -> Self {
+        Self::CasteError(error)
     }
 }

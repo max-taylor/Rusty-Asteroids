@@ -6,28 +6,21 @@ mod systems;
 
 use crate::api::display::Point;
 use app::App;
+use crossterm::terminal::size;
 
-use entities::{Controller, Player};
+fn get_screen_size() -> Point<u32> {
+    let (rows, columns) = size().unwrap();
+
+    Point::new(rows as u32, columns as u32)
+}
 
 fn main() {
-    let dimensions: &Point<u32> = &Point {
-        width: 60,
-        height: 40,
-    };
+    // let dimensions: &Point<u32> = &Point {
+    //     width: 60,
+    //     height: 40,
+    // };
 
-    let mut player = Player::new();
+    let mut app = App::new(&get_screen_size()).unwrap();
 
-    let mut app = App::new(dimensions).unwrap();
-
-    app.run(|game_state, display_controller| {
-        if let Some(event) = &game_state.keyboard_event {
-            player.handle_event(&event);
-        }
-
-        // Game logic
-        display_controller.draw_drawable(&mut player)?;
-
-        Ok(())
-    })
-    .unwrap()
+    app.run().unwrap();
 }

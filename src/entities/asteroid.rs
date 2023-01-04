@@ -6,14 +6,25 @@ use crate::{
     components::{Drawable, DrawableState, DrawableType},
 };
 
-pub struct Bullet {
-    pub drawable: DrawableState,
-}
+// let spaceship: Vec<Vec<Option<Element>>> = [
+//     [None, Some(ARROW_ELEMENT), None],
+//     [
+//         Some(ARROW_ELEMENT),
+//         Some(ARROW_ELEMENT),
+//         Some(ARROW_ELEMENT),
+//     ],
+// ]
+// .map(|row| row.to_vec())
+// .to_vec();
 
 const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
-impl Bullet {
-    pub fn new(location: Point<u32>) -> Self {
+pub struct Asteroid {
+    pub drawable: DrawableState,
+}
+
+impl Asteroid {
+    pub fn new() -> Self {
         let map = Layout::new(
             &Point {
                 width: 1,
@@ -23,12 +34,12 @@ impl Bullet {
         );
 
         Self {
-            drawable: DrawableState::new(map, location, DrawableType::Enemy),
+            drawable: DrawableState::new(map, Default::default(), DrawableType::Enemy),
         }
     }
 }
 
-impl Drawable for Bullet {
+impl Drawable for Asteroid {
     fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self {
         self.drawable.location = updated_position;
 

@@ -23,23 +23,16 @@ impl DisplayController {
     /// * `dimensions` - The controllable area
     ///
     /// ```
-    pub fn new(
-        dimensions: &Point<u32>,
-        enable_offset: bool,
-    ) -> Result<Self, DisplayControllerError> {
+    pub fn new(dimensions: &Point<u32>) -> Result<Self, DisplayControllerError> {
         let (rows, columns) = size().unwrap();
 
         if dimensions.height > columns.into() || dimensions.width > rows.into() {
             return Err(DisplayControllerError::DisplayTooSmallForDimensions);
         }
-
         // Display is the size of the screen
         let screen_size = Point::new(rows as u32, columns as u32);
 
-        let offset = match enable_offset {
-            true => (screen_size - *dimensions) / Point::new(2, 2),
-            false => Default::default(),
-        };
+        let offset = (screen_size - *dimensions) / Point::new(2, 2);
 
         Ok(DisplayController {
             layout: Layout::new(&screen_size, None),
@@ -66,6 +59,17 @@ impl DisplayController {
                     self.layout.draw_item(has_element, &updated_position)?;
                 }
             }
+        }
+
+        Ok(self)
+    }
+
+    pub fn draw_vec_drawable(
+        &mut self,
+        drawable_items: Vec<&impl Drawable>,
+    ) -> DisplayControllerResult<&mut Self> {
+        for drawable in drawable_items {
+            self.draw_drawable(drawable)?;
         }
 
         Ok(self)

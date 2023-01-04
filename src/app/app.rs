@@ -1,10 +1,15 @@
 use std::{io::stdout, panic, time::Duration};
 
-use crossterm::event::{poll, read, Event, KeyCode};
+use crossterm::{
+    event::{poll, read, Event, KeyCode},
+    terminal::size,
+};
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
-    entities::Borders,
+    components::Drawable,
+    entities::{controller::create_event, Asteroid, Borders, Bullet, Controller, Player},
+    systems::update_positions,
 };
 
 use super::game_state::GameState;
@@ -14,12 +19,21 @@ pub struct App {
     output: Output,
     game_state: GameState,
     borders: Borders,
+    player: Player,
+    asteroids: Vec<Asteroid>,
 }
 
 impl App {
     pub fn new(dimensions: &Point<u32>) -> Result<App, DisplayControllerError> {
+        // let dimensions = dimensions.unwrap_or_else(|| {
+        //     let (rows, columns) = size().unwrap();
+
+        //     &Point::new(rows as u32, columns as u32)
+        // });
+
         let mut output = Output::new(stdout());
-        let display_controller = DisplayController::new(&dimensions, true);
+
+        let display_controller = DisplayController::new(dimensions);
 
         if let Some(error) = display_controller.as_ref().err() {
             output.close()?;
@@ -32,6 +46,8 @@ impl App {
             game_state: GameState::new(),
             borders: Borders::new(dimensions)?,
             output,
+            player: Player::new(),
+            asteroids: Default::default(),
         })
     }
 
@@ -44,10 +60,9 @@ impl App {
         Ok(())
     }
 
-    pub fn run<F>(&mut self, mut frame_action: F) -> Result<(), DisplayControllerError>
-    where
-        F: FnMut(&mut GameState, &mut DisplayController) -> Result<(), DisplayControllerError>,
-    {
+    // TODO trying to return an array of Vec<impl Drawables from the function that is executed
+
+    pub fn run(&mut self) -> Result<(), DisplayControllerError> {
         self.start()?;
 
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
@@ -67,9 +82,25 @@ impl App {
                         self.game_state.keyboard_event = Some(event);
                     }
 
+                    // let test_items: Vec<Box<dyn Drawable>> = Vec::new():
+
+                    // let entities_in_frame: Vec<dyn Drawable> = vec![self.player, self.borders];
+
                     self.display_controller.draw_drawable(&self.borders)?;
 
-                    frame_action(&mut self.game_state, &mut self.display_controller)?;
+                    if let Some(event) = &self.game_state.keyboard_event {
+                        if event == &create_event(KeyCode::Enter) {
+                            // self.asteroids.push(Bullet::new());
+                        }
+
+                        self.player.handle_event(&event);
+                    }
+
+                    update_positions(vec![&mut self.player]);
+
+                    self.display_controller.draw_drawable(&self.player)?;
+
+                    // let drawable_items: Vec<impl Drawable> = vec![self.borders];
 
                     self.output.print_display(&self.display_controller.layout)?;
                 }

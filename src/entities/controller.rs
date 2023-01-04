@@ -12,17 +12,17 @@ pub trait Controller {
 
     fn additional_event_logic(&mut self, event: &Event) -> &mut Self;
 
-    fn handle_event(&mut self, event: &Event) -> &mut Self {
+    fn handle_event(&mut self, event: &Event) {
         if event == &create_event(KeyCode::Up) {
-            return self.up();
+            self.up();
         } else if event == &create_event(KeyCode::Down) {
-            return self.down();
+            self.down();
         } else if event == &create_event(KeyCode::Left) {
-            return self.left();
+            self.left();
         } else if event == &create_event(KeyCode::Right) {
-            return self.right();
+            self.right();
+        } else {
+            self.additional_event_logic(event);
         }
-
-        self.additional_event_logic(event)
     }
 }

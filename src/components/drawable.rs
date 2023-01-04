@@ -29,6 +29,8 @@ impl DrawableState {
 }
 
 pub trait Drawable {
+    fn set_position(&mut self, updated_position: Point<u32>) -> &mut Self;
+
     fn get_drawable_state(&self) -> &DrawableState;
 
     fn update_position(&mut self) -> &mut Self {
@@ -48,6 +50,8 @@ pub trait Drawable {
             updated_position.width = 0;
         }
 
-        self
+        // self.
+
+        self.set_position(updated_position.into())
     }
 }
