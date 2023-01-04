@@ -1,7 +1,8 @@
 use crossterm::terminal::size;
 
-use crate::components::Drawable;
+use crate::components::{Drawable, DrawableState, Health};
 use crate::helpers::get_is_position_outside_dimensions;
+use crate::systems::EntityController;
 
 use super::Point;
 use super::{display_controller_error::DisplayControllerError, Layout};
@@ -50,9 +51,8 @@ impl DisplayController {
     ///
     pub fn draw_drawable(
         &mut self,
-        drawable: &impl Drawable,
+        drawable_state: &DrawableState,
     ) -> DisplayControllerResult<(&mut Self, bool)> {
-        let drawable_state = drawable.get_drawable_state();
         let base_location = drawable_state.location + self.offset;
         let mut has_drawn_drawable = false;
         // Iterate over each row in the map
@@ -82,12 +82,31 @@ impl DisplayController {
         Ok((self, has_drawn_drawable))
     }
 
+    /// Draws the entities within a given entity controller. It also removes items from the entities array if they are outside of the drawable dimensions.
+    /// This is primarily used for the Bullet controller and asteroid controller
+    pub fn draw_entity_controller_items<T: Drawable + Health>(
+        &mut self,
+        entity_controller: &mut EntityController<T>,
+    ) -> &mut Self {
+        entity_controller
+            .get_mut_drawable_array()
+            .retain(|drawable| {
+                let result = self.draw_drawable(drawable.get_drawable_state());
+
+                let (_, did_draw) = result.unwrap();
+
+                did_draw
+            });
+
+        self
+    }
+
     pub fn draw_vec<'a>(
         &mut self,
         vec_array: &'a mut Vec<impl Drawable>,
     ) -> &'a mut Vec<impl Drawable> {
         vec_array.retain(|drawable| {
-            let result = self.draw_drawable(drawable);
+            let result = self.draw_drawable(drawable.get_drawable_state());
 
             let (_, did_draw) = result.unwrap();
 
@@ -143,7 +162,7 @@ mod tests {
         // let drawable = Drawable::
         let mut display_controller = DisplayController::new(None).unwrap();
 
-        let result = display_controller.draw_drawable(&MockDrawble::new());
+        let result = display_controller.draw_drawable(&MockDrawble::new().get_drawable_state());
 
         assert!(result.err().is_none());
     }

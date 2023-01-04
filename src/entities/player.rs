@@ -3,15 +3,15 @@ use crossterm::{event::KeyCode, style::Color};
 use crate::{
     api::display::{Layout, Point},
     components::{get_updated_health, Drawable, DrawableState, DrawableType, Health, Spawnable},
+    systems::EntityController,
 };
 
 use super::{consts::SPACE_SHIP, controller::create_event, Bullet, Controller};
 
 pub struct Player {
     pub drawable: DrawableState,
-    pub bullets: Vec<Bullet>,
     pub health: u32,
-    // pub bullet_entity_controller: Entity
+    pub bullet_entity_controller: EntityController<Bullet>,
 }
 
 const WIDTH_MAX_VELOCITY: i64 = 33;
@@ -40,15 +40,12 @@ impl Player {
                 None,
             ),
             health: 100,
-            bullets: Default::default(),
+            bullet_entity_controller: EntityController::new(),
         }
     }
 
-    pub fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
-        self.bullets
-            .iter()
-            .map(|asteroid| asteroid.get_drawable_state())
-            .collect()
+    pub fn get_bullet_drawable_states(&self) -> Vec<&DrawableState> {
+        self.bullet_entity_controller.get_all_drawable_states()
     }
 
     pub fn apply_bullet_damage(&mut self) -> &mut Self {
@@ -94,8 +91,6 @@ impl Controller for Player {
     }
 
     fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
-        // self.drawable.velocity = Default::default();
-
         if event == &create_event(KeyCode::Enter) {
             let spawn_position = self
                 .drawable
@@ -103,7 +98,8 @@ impl Controller for Player {
                 .add_width(self.drawable.layout.dimensions.width / 2 - 1)
                 .add_height(1);
 
-            self.bullets.push(Bullet::new(spawn_position));
+            self.bullet_entity_controller
+                .spawn_entity(Bullet::new(spawn_position));
         }
 
         self

@@ -1,12 +1,39 @@
 use uuid::Uuid;
 
-use crate::components::{Drawable, Health};
+use crate::components::{Drawable, DrawableState, Health};
 
-struct EntityController<T: Drawable + Health> {
-    entities: Vec<T>,
+pub struct EntityController<T: Drawable + Health> {
+    pub entities: Vec<T>,
 }
 
+// pub trait EntityControllerTrait<T: Drawable + Health> {
+//     fn new() -> Self;
+
+//     fn get_mut_drawable_array(&self) -> &mut Vec<T>;
+
+//     fn get_all_drawable_states(&self) -> Vec<&DrawableState>;
+
+//     fn spawn_entity(&mut self, entity: T) -> &mut Self;
+
+//     fn apply_entity_damage(&mut self, uuid: Uuid, damage: u32) -> &mut Self;
+// }
+
 impl<T: Drawable + Health> EntityController<T> {
+    pub fn new() -> Self {
+        EntityController { entities: vec![] }
+    }
+
+    pub fn get_mut_drawable_array(&mut self) -> &mut Vec<T> {
+        &mut self.entities
+    }
+
+    pub fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
+        self.entities
+            .iter()
+            .map(|entity| entity.get_drawable_state())
+            .collect()
+    }
+
     pub fn spawn_entity(&mut self, entity: T) -> &mut Self {
         self.entities.push(entity);
 

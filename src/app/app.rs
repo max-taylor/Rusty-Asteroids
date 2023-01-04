@@ -124,7 +124,10 @@ impl App {
         self.player
             .update_position(Some(&self.dimensions), game_loop_duration);
 
-        update_position_for_drawable_vec(&mut self.player.bullets, game_loop_duration);
+        update_position_for_drawable_vec(
+            &mut self.player.bullet_entity_controller.entities,
+            game_loop_duration,
+        );
 
         update_position_for_drawable_vec(
             &mut self.asteroid_controller.asteroids,
@@ -138,18 +141,24 @@ impl App {
         let mut drawable_items: Vec<&DrawableState> = vec![self.player.get_drawable_state()];
 
         drawable_items.append(&mut self.asteroid_controller.get_all_drawable_states());
-        drawable_items.append(&mut self.player.get_all_drawable_states());
+        drawable_items.append(&mut self.player.get_bullet_drawable_states());
 
         drawable_items
     }
 
     /// Method to handle drawing all the entities that will be rendered
     fn draw_all_entities(&mut self) -> Result<&mut Self, DisplayControllerError> {
-        // Ignore the return type for the borders and player, because we don't delete these at any point
-        self.display_controller.draw_drawable(&self.borders)?;
-        self.display_controller.draw_drawable(&self.player)?;
+        self.display_controller
+            .draw_drawable(&self.borders.get_drawable_state())?;
 
-        self.display_controller.draw_vec(&mut self.player.bullets);
+        self.display_controller
+            .draw_drawable(&self.player.get_drawable_state())?;
+
+        self.display_controller
+            .draw_entity_controller_items(&mut self.player.bullet_entity_controller);
+
+        // self.display_controller
+        //     .draw_entity_controller_items(&mut self.player.bullet_entity_controller);
 
         self.display_controller
             .draw_vec(&mut self.asteroid_controller.asteroids);
