@@ -1,5 +1,7 @@
 use crossterm::style::Color;
 
+use crate::helpers::get_is_position_outside_dimensions_with_offset;
+
 use super::{
     element::{parse_str_to_element_array, Element, DEFAULT_BACKGROUND},
     DisplayControllerError, Point,
@@ -29,7 +31,7 @@ pub struct Layout {
     pub default_element: Option<Element>,
 }
 
-type MapResult<T> = Result<T, DisplayControllerError>;
+type LayoutResult<T> = Result<T, DisplayControllerError>;
 
 pub enum Direction {
     Vertical,
@@ -133,15 +135,71 @@ impl Layout {
         Layout::from_map(map, None)
     }
 
+    /// This method allows drawing an additional map ontop of the map contained within this layout. This is useful when drawing ascii art.
+    /// # Arguments
+    ///
+    /// * `map` - The map to draw
+    /// * `location` - Location to draw it
+    /// * `drawable_offset` -
+    pub fn draw_map(
+        &mut self,
+        map: &Map,
+        location: Point<i64>,
+        drawable_offset: &Point<i64>,
+    ) -> LayoutResult<(bool)> {
+        let mut has_drawn_drawable = false;
+
+        // Iterate over each row in the map
+        for (num_row, drawable_row) in map.iter().enumerate() {
+            // Then each column in the row
+            for num_column in 0..drawable_row.len() {
+                if let Some(has_element) = drawable_row[num_column] {
+                    let updated_position = location
+                        .add_width(num_column as i64)
+                        .add_height(num_row as i64);
+
+                    // Check if position is outside of dimension range
+                    if get_is_position_outside_dimensions_with_offset(
+                        &self.dimensions,
+                        &updated_position,
+                        drawable_offset,
+                    ) {
+                        continue;
+                    }
+
+                    has_drawn_drawable = true;
+
+                    self.draw_item(has_element, &updated_position)?;
+                }
+            }
+        }
+
+        Ok(has_drawn_drawable)
+    }
+
     pub fn reset(&mut self) -> &mut Self {
         self.map = Layout::new(&self.dimensions, self.default_element).map;
 
         self
     }
 
+    pub fn draw_str(
+        &mut self,
+        str: &str,
+        position: &Point<i64>,
+        background: Option<Color>,
+        foreground: Option<Color>,
+    ) -> LayoutResult<&mut Self> {
+        let element_array = parse_str_to_element_array(str, background, foreground);
+
+        self.draw_element_array(element_array, position)?;
+
+        Ok(self)
+    }
+
     // pub fn get_vec_of_all_points_with_element(&self)
 
-    pub fn get_row(&self, row_number: i64) -> MapResult<&Vec<Option<Element>>> {
+    pub fn get_row(&self, row_number: i64) -> LayoutResult<&Vec<Option<Element>>> {
         let row = self
             .map
             .get(row_number as usize)
@@ -151,7 +209,7 @@ impl Layout {
     }
 
     /// Returns the selected column_number. Has a differing type to get_row because we have to create an array of references and return it, whereas the get_row method returns a pointer to the row. A column doesn't exactly exist, it is just an element at the same row index for each row
-    pub fn get_column(&self, column_number: i64) -> MapResult<Vec<&Option<Element>>> {
+    pub fn get_column(&self, column_number: i64) -> LayoutResult<Vec<&Option<Element>>> {
         let mut items: Vec<&Option<Element>> = Vec::with_capacity(self.dimensions.height as usize);
 
         for height in 0..self.dimensions.height {
@@ -166,7 +224,7 @@ impl Layout {
         Ok(items)
     }
 
-    pub fn get_row_mut(&mut self, row_number: i64) -> MapResult<&mut Vec<Option<Element>>> {
+    pub fn get_row_mut(&mut self, row_number: i64) -> LayoutResult<&mut Vec<Option<Element>>> {
         let row = self
             .map
             .get_mut(row_number as usize)
@@ -188,7 +246,7 @@ impl Layout {
     //     Ok(items)
     // }
 
-    pub fn get_element_mut(&mut self, point: &Point<i64>) -> MapResult<&mut Option<Element>> {
+    pub fn get_element_mut(&mut self, point: &Point<i64>) -> LayoutResult<&mut Option<Element>> {
         let row = self.get_row_mut(point.height)?;
 
         let element = row
@@ -198,7 +256,7 @@ impl Layout {
         Ok(element)
     }
 
-    pub fn get_element(&self, point: &Point<i64>) -> MapResult<&Option<Element>> {
+    pub fn get_element(&self, point: &Point<i64>) -> LayoutResult<&Option<Element>> {
         let row = self.get_row(point.height)?;
 
         let element = row

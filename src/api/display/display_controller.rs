@@ -8,6 +8,7 @@ use crate::helpers::{
     get_is_position_outside_dimensions, get_is_position_outside_dimensions_with_offset,
 };
 use crate::systems::EntityController;
+use crate::user_display::HEART;
 
 use super::element::{parse_str_to_element_array, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
 use super::{display_controller_error::DisplayControllerError, Layout};
@@ -52,18 +53,20 @@ impl DisplayController {
         game_state: &GameState,
         lives: u32,
     ) -> DisplayControllerResult<&mut Self> {
-        let life_elements = vec![Some(LIFE_ELEMENT); lives as usize];
+        // self.layout
+        //     .draw_str(HEART, &Point::new(5, 2), None, Some(Color::Red))?;
 
-        self.layout
-            .draw_element_array(life_elements, &Point::new(0, 2))?;
+        // let life_elements = vec![Some(LIFE_ELEMENT); lives as usize];
+
+        // self.layout.draw_element_array(life_elements)?;
 
         // Convert the score string into an array of elements for simple printing to the display
-        let score_array = parse_str_to_element_array(&game_state.score.to_string(), None, None);
+        // let score_array = parse_str_to_element_array(&game_state.score.to_string(), None, None);
 
-        self.layout.draw_element_array(
-            score_array,
-            &Point::new(self.layout.dimensions.width - 5, 2),
-        )?;
+        // self.layout.draw_element_array(
+        //     score_array,
+        //     &Point::new(self.layout.dimensions.width - 5, 2),
+        // )?;
 
         Ok(self)
     }
@@ -74,31 +77,12 @@ impl DisplayController {
         drawable_state: &DrawableState,
     ) -> DisplayControllerResult<(&mut Self, bool)> {
         let base_location = drawable_state.location + self.entity_drawable_offset;
-        let mut has_drawn_drawable = false;
-        // Iterate over each row in the map
-        for (num_row, drawable_row) in drawable_state.layout.map.iter().enumerate() {
-            // Then each column in the row
-            for num_column in 0..drawable_row.len() {
-                if let Some(has_element) = drawable_row[num_column] {
-                    let updated_position = base_location
-                        .add_width(num_column as i64)
-                        .add_height(num_row as i64);
 
-                    // Check if position is outside of dimension range
-                    if get_is_position_outside_dimensions_with_offset(
-                        &self.layout.dimensions,
-                        &updated_position,
-                        &self.entity_drawable_offset,
-                    ) {
-                        continue;
-                    }
-
-                    has_drawn_drawable = true;
-
-                    self.layout.draw_item(has_element, &updated_position)?;
-                }
-            }
-        }
+        let has_drawn_drawable = self.layout.draw_map(
+            &drawable_state.layout.map,
+            base_location,
+            &self.entity_drawable_offset,
+        )?;
 
         Ok((self, has_drawn_drawable))
     }

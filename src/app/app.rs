@@ -6,8 +6,9 @@ use crate::{
     api::display::{get_screen_size, DisplayController, Output, Point},
     components::{Drawable, DrawableState, Health},
     entities::{Borders, Controller, Player},
-    helpers::get_now,
+    helpers::{get_keyboard_event, get_now},
     systems::{get_collision_summary, run_collision_detection, AsteroidController},
+    user_display::GAME_OVER_TEXT,
 };
 
 use super::{
@@ -25,7 +26,7 @@ pub struct App {
     dimensions: Point<i64>,
 }
 
-const HUD_HEIGHT: i64 = 5;
+const HUD_HEIGHT: i64 = 10;
 
 pub type AppResult<T> = Result<T, AppError>;
 
@@ -68,21 +69,18 @@ impl App {
 
     /// Process the keyboard events, also returns true if the user closes the game with escape
     fn handle_keyboard(&mut self) -> AppResult<()> {
-        // Handle keyboard presses
-        if poll(Duration::from_millis(100))? {
-            let event = read()?;
+        let event = get_keyboard_event()?;
 
+        if let Some(event) = event {
             if event == Event::Key(KeyCode::Esc.into()) {
                 self.game_state.stop_game();
 
                 return Ok(());
             }
 
-            self.game_state.keyboard_event = Some(event);
-        }
-
-        if let Some(event) = &self.game_state.keyboard_event {
             self.player.handle_event(&event);
+
+            self.game_state.keyboard_event = Some(event);
         }
 
         Ok(())
@@ -112,13 +110,30 @@ impl App {
 
     pub fn run(&mut self) -> AppResult<()> {
         self.start()?;
-
+        dbg!("YO");
         let result = self.run_game_loop();
+
+        dbg!("UHH");
 
         if let Err(err) = result.as_ref() {
             match err {
-                AppError::OutOfLives => {}
-                _ => {}
+                AppError::OutOfLives => {
+                    self.reset();
+                    dbg!("HERE22");
+                    let result = self.display_controller.layout.draw_str(
+                        GAME_OVER_TEXT,
+                        &Point::new(0, 0),
+                        None,
+                        None,
+                    );
+
+                    dbg!(result.err());
+
+                    // while true {}
+                }
+                _ => {
+                    dbg!("IN THIS ONE");
+                }
             }
         }
 

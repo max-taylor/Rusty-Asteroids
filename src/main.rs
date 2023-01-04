@@ -4,6 +4,7 @@ mod components;
 mod entities;
 mod helpers;
 mod systems;
+mod user_display;
 
 use app::App;
 
