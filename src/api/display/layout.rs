@@ -69,7 +69,7 @@ impl Layout {
         }
     }
 
-    pub fn from_ascii(ascii: &str) -> Self {
+    pub fn from_ascii(ascii: &str, color: Color) -> Self {
         let rows = ascii.split("\n");
 
         let width = rows.into_iter().max_by_key(|row| row.len()).unwrap().len();
@@ -78,7 +78,7 @@ impl Layout {
             vec![vec![None; width as usize]; ascii.split("\n").count()];
 
         for (index, row) in ascii.split("\n").enumerate() {
-            map[index] = parse_str_to_element_array(row, None, Some(Color::DarkCyan));
+            map[index] = parse_str_to_element_array(row, None, Some(color));
         }
 
         Layout::from_map(map, None)

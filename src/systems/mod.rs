@@ -1,5 +1,7 @@
 mod asteroid_controller;
-mod collion_detection;
+mod collision_detection;
+mod entity_controller;
 
 pub use asteroid_controller::*;
-pub use collion_detection::*;
+pub use collision_detection::*;
+pub use entity_controller::*;

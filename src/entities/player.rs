@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use crossterm::{event::KeyCode, style::Color};
 
 use crate::{
     api::display::{Layout, Point},
@@ -11,6 +11,7 @@ pub struct Player {
     pub drawable: DrawableState,
     pub bullets: Vec<Bullet>,
     pub health: u32,
+    // pub bullet_entity_controller: Entity
 }
 
 const WIDTH_MAX_VELOCITY: i64 = 33;
@@ -29,7 +30,7 @@ impl Player {
             });
         }
 
-        let layout = Layout::from_ascii(SPACE_SHIP);
+        let layout = Layout::from_ascii(SPACE_SHIP, Color::Cyan);
 
         Self {
             drawable: DrawableState::new(
@@ -114,5 +115,9 @@ impl Health for Player {
         self.health = get_updated_health(self.health, damage);
 
         self
+    }
+
+    fn get_health(&self) -> u32 {
+        self.health
     }
 }

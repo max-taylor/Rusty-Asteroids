@@ -66,4 +66,8 @@ impl Health for Bullet {
 
         self
     }
+
+    fn get_health(&self) -> u32 {
+        self.health
+    }
 }

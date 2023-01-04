@@ -1,3 +1,4 @@
+use crossterm::style::Color;
 use rand::Rng;
 
 use crate::{
@@ -21,7 +22,7 @@ pub struct Asteroid {
 
 impl Asteroid {
     pub fn new(location: Point<i64>, velocity: Point<i64>) -> Self {
-        let map = Layout::from_ascii(ASTEROID);
+        let map = Layout::from_ascii(ASTEROID, Color::Grey);
 
         Self {
             drawable: DrawableState::new(
@@ -52,5 +53,9 @@ impl Health for Asteroid {
         self.health = get_updated_health(self.health, damage);
 
         self
+    }
+
+    fn get_health(&self) -> u32 {
+        self.health
     }
 }

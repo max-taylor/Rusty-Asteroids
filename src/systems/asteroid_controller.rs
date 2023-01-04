@@ -80,6 +80,7 @@ impl AsteroidController {
         if asteroid_index.is_none() {
             return self;
         }
+
         // TODO: Clean this
         let asteroid_index_2 = asteroid_index.unwrap();
 
