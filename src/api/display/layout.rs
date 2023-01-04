@@ -119,6 +119,8 @@ impl Layout {
         self
     }
 
+    // pub fn get_vec_of_all_points_with_element(&self)
+
     pub fn get_row(&self, row_number: i64) -> MapResult<&Vec<Option<Element>>> {
         let row = self
             .map

@@ -9,12 +9,23 @@ pub struct AsteroidController {
     dimensions: Point<i64>,
 }
 
-fn get_asteroid_spawn_location(dimensions: &Point<i64>) -> Point<i64> {
+fn get_random_in_range(start: i64, end: i64) -> i64 {
     let mut rng = rand::thread_rng();
 
+    rng.gen_range(start..end)
+}
+
+fn get_asteroid_spawn_location(dimensions: &Point<i64>) -> Point<i64> {
     Point {
         height: 0,
-        width: rng.gen_range(0..dimensions.width),
+        width: get_random_in_range(0, dimensions.width),
+    }
+}
+
+fn get_asteroid_velocity() -> Point<i64> {
+    Point {
+        width: get_random_in_range(-4, 4),
+        height: get_random_in_range(1, 5),
     }
 }
 
@@ -38,8 +49,10 @@ impl AsteroidController {
 
         if self.time_elapsed_since_spawn > self.spawn_rate {
             self.time_elapsed_since_spawn = 0;
-            self.asteroids
-                .push(Asteroid::new(get_asteroid_spawn_location(&self.dimensions)));
+            self.asteroids.push(Asteroid::new(
+                get_asteroid_spawn_location(&self.dimensions),
+                get_asteroid_velocity(),
+            ));
         }
 
         self

@@ -45,7 +45,7 @@ impl App {
             borders: Borders::new(&dimensions)?,
             output,
             player: Player::new(),
-            asteroid_controller: AsteroidController::new(500, dimensions),
+            asteroid_controller: AsteroidController::new(50, dimensions),
             dimensions,
         })
     }
@@ -64,8 +64,6 @@ impl App {
     pub fn run(&mut self) -> Result<(), DisplayControllerError> {
         self.start()?;
 
-        let mut spawn_in_loops = SPAWN_GAME_LOOPS;
-
         let result = panic::catch_unwind(panic::AssertUnwindSafe(
             || -> Result<(), DisplayControllerError> {
                 while self.game_state.is_running() {
@@ -83,6 +81,7 @@ impl App {
 
                         self.game_state.keyboard_event = Some(event);
                     }
+
                     if let Some(event) = &self.game_state.keyboard_event {
                         self.player.handle_event(&event);
                     }
