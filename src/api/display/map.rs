@@ -17,6 +17,7 @@ pub enum Direction {
     Vertical,
     Horizontal,
 }
+
 impl Map {
     /// Creates a new map with None values for initialization
     ///
@@ -173,6 +174,28 @@ impl Map {
         Ok(self)
     }
 
+    // pub fn draw_drawable(
+    //     &mut self,
+    //     drawable: &Drawable,
+    // ) -> Result<&mut Self, DisplayControllerError> {
+    //     let base_location = drawable.location + self.offset;
+    //     // Iterate over each row in the map
+    //     for (num_row, drawable_row) in drawable.map.map.iter().enumerate() {
+    //         // Then each column in the row
+    //         for num_column in 0..drawable_row.len() {
+    //             if let Some(has_element) = drawable_row[num_column] {
+    //                 let updated_position = base_location
+    //                     .add_width(num_column as u32)
+    //                     .add_height(num_row as u32);
+
+    //                 self.display.draw_item(has_element, &updated_position)?;
+    //             }
+    //         }
+    //     }
+
+    //     Ok(self)
+    // }
+
     // TODO: Add docs describing that the line draws from top->bottom
     pub fn draw_line(
         &mut self,
@@ -222,10 +245,7 @@ impl Map {
 
 #[cfg(test)]
 mod tests {
-    use crate::api::display::{
-        element::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
-        Element, Map, Point,
-    };
+    use crate::api::display::{Element, Map, Point};
 
     use super::Direction;
 

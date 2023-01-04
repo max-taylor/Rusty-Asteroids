@@ -6,14 +6,18 @@ use crossterm::{
 };
 
 use crate::{
-    api::display::{DisplayController, DisplayControllerError, Point},
+    api::display::{DisplayController, DisplayControllerError, Map, Point},
     entities::{Borders, Controller, Player},
 };
 
 pub struct App {
     player: Player,
-    display_controller: DisplayController, // position_controller: PositionController<'dimensions, 'position_controller>,
+    display_controller: DisplayController,
     borders: Borders,
+}
+
+pub struct LoopState {
+    keyboard_event: Option<Event>,
 }
 
 impl App {
@@ -29,7 +33,7 @@ impl App {
         }
 
         let mut app = App {
-            player: Player::new(&dimensions),
+            player: Player::new(),
             display_controller: display_controller.unwrap(), // position_controller,
             borders: Borders::new(&dimensions)?,
         };
@@ -43,10 +47,21 @@ impl App {
         Ok(())
     }
 
+    // pub fn run<F>(&mut self, mut frame_action: F)
+    // where
+    //     F: FnMut(&mut LoopState, &mut Map),
+    // {
+    //     self.display_controller.display.reset();
+
+    //     while
+
+    //     frame_action();
+    // }
+
     fn setup_listeners(&mut self) -> Result<(), DisplayControllerError> {
         loop {
             // TODO: A high-order function that acts a game loop and does the resetting and other house keeping would be ideal
-            self.display_controller.reset_display();
+            self.display_controller.display.reset();
 
             if poll(Duration::from_millis(100))? {
                 let event = read()?;

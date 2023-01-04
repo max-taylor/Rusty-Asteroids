@@ -12,7 +12,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(dimensions: &Point) -> Self {
+    pub fn new() -> Self {
         let location = Point {
             width: 5,
             height: 5,

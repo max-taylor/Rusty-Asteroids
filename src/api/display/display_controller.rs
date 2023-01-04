@@ -19,9 +19,7 @@ use super::{
 pub struct DisplayController {
     offset: Point,
     // entities: Vec<&Point>,
-    screen_size: Point,
-    display: Map,
-    default_element: Element,
+    pub display: Map,
     pub target: io::Stdout,
 }
 
@@ -50,8 +48,6 @@ impl DisplayController {
         let mut controller = DisplayController {
             display: Map::new(&screen_size, None),
             target: stdout(),
-            default_element: Element::default(),
-            screen_size,
             // The offset is where all drawing will be done, this is the center of the terminal screen
             offset: (screen_size - *dimensions) / Point::new(2, 2),
         };
@@ -70,12 +66,6 @@ impl DisplayController {
     /// Flushing the target publishes all queued writes
     fn flush(&mut self) -> &mut Self {
         self.target.flush().unwrap();
-
-        self
-    }
-
-    pub fn reset_display(&mut self) -> &mut Self {
-        self.display.reset();
 
         self
     }
@@ -111,29 +101,6 @@ impl DisplayController {
         Ok(self)
     }
 
-    pub fn print_display(&mut self) -> Result<&mut Self, DisplayControllerError> {
-        self.reset_cursor();
-
-        for row in self.display.map.iter() {
-            for element in row.iter() {
-                match element {
-                    Some(element) => {
-                        DisplayController::print_element(&mut self.target, element, None)?;
-                    }
-                    None => {
-                        DisplayController::print_element(
-                            &mut self.target,
-                            &self.default_element,
-                            None,
-                        )?;
-                    }
-                }
-            }
-        }
-
-        Ok(self)
-    }
-
     pub fn print_element(
         target: &mut io::Stdout,
         element: &Element,
@@ -159,6 +126,29 @@ impl DisplayController {
         .map_err(DisplayControllerError::from_crossterm_error)?;
 
         Ok(())
+    }
+
+    pub fn print_display(&mut self) -> Result<&mut Self, DisplayControllerError> {
+        self.reset_cursor();
+
+        for row in self.display.map.iter() {
+            for element in row.iter() {
+                match element {
+                    Some(element) => {
+                        DisplayController::print_element(&mut self.target, element, None)?;
+                    }
+                    None => {
+                        DisplayController::print_element(
+                            &mut self.target,
+                            &Default::default(),
+                            None,
+                        )?;
+                    }
+                }
+            }
+        }
+
+        Ok(self)
     }
 
     pub fn close(target: &mut io::Stdout) -> Result<(), CrosstermError> {
