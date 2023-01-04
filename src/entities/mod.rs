@@ -4,7 +4,6 @@ mod bullet;
 mod consts;
 pub mod controller;
 pub mod player;
-mod traits;
 
 pub use asteroid::*;
 pub use borders::Borders;

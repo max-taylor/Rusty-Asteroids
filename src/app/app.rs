@@ -67,13 +67,15 @@ impl App {
     }
 
     /// Process the keyboard events, also returns true if the user closes the game with escape
-    fn handle_keyboard(&mut self) -> AppResult<bool> {
+    fn handle_keyboard(&mut self) -> AppResult<()> {
         // Handle keyboard presses
         if poll(Duration::from_millis(100))? {
             let event = read()?;
 
             if event == Event::Key(KeyCode::Esc.into()) {
-                return Ok(true);
+                self.game_state.stop_game();
+
+                return Ok(());
             }
 
             self.game_state.keyboard_event = Some(event);
@@ -83,45 +85,46 @@ impl App {
             self.player.handle_event(&event);
         }
 
-        Ok(false)
+        Ok(())
+    }
+
+    fn run_game_loop(&mut self) -> AppResult<()> {
+        while self.game_state.is_running() {
+            let game_loop_start = get_now();
+            self.reset();
+
+            self.handle_keyboard()?;
+
+            let game_loop_duration = get_now() - game_loop_start;
+
+            self.asteroid_controller
+                .handle_game_loop(game_loop_duration);
+
+            self.update_positions(game_loop_duration);
+
+            self.handle_collisions()?;
+
+            self.draw_all_entities()?;
+        }
+
+        Ok(())
     }
 
     pub fn run(&mut self) -> AppResult<()> {
         self.start()?;
 
-        // Simple "try-catch" wrapper to catch panic's so we can safely shutdown the display
-        let result = panic::catch_unwind(panic::AssertUnwindSafe(|| -> AppResult<()> {
-            while self.game_state.is_running() {
-                let game_loop_start = get_now();
-                self.reset();
+        let result = self.run_game_loop();
 
-                let shutdown = self.handle_keyboard()?;
-                if shutdown {
-                    break;
-                }
-
-                let game_loop_duration = get_now() - game_loop_start;
-
-                self.asteroid_controller
-                    .handle_game_loop(game_loop_duration);
-
-                self.update_positions(game_loop_duration);
-
-                self.handle_collisions();
-
-                self.draw_all_entities()?;
+        if let Err(err) = result.as_ref() {
+            match err {
+                AppError::OutOfLives => {}
+                _ => {}
             }
-            Ok(())
-        }));
+        }
 
         self.shut_down()?;
-        dbg!("BEFORE");
-        dbg!(result.as_ref().err());
 
-        let unwrap = result.unwrap();
-
-        // dbg!(unwrap);
-        unwrap
+        result
     }
 
     fn handle_collisions(&mut self) -> AppResult<&mut Self> {

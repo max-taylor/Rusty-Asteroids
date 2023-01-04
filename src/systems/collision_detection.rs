@@ -5,14 +5,7 @@ use uuid::Uuid;
 use crate::{
     api::display::{collapse_twoDVec, create_map, Point, TwoDVec},
     components::{DrawableState, DrawableType},
-    helpers::get_is_position_outside_dimensions,
 };
-
-#[derive(PartialEq, Debug)]
-pub enum CollisionResult {
-    // If damage has been inflicted and how much
-    Damage(u32),
-}
 
 // Enum stores the damage result of the player or ammunition and also the damage result of the asteroid
 pub struct CollisionOutcome {
@@ -27,7 +20,7 @@ struct MinimalDrawableDetails {
     pub drawable_type: DrawableType,
 }
 
-/// This method calculates the positions where the provided drawable_items overlap. It returns an array where each item is a position on the grid with overlapping drawable_items, it returns their uuid and drawable_type.
+/// This method calculates the positions where the provided drawable_items overlap. It returns an array where each item is a position on the grid with overlapping drawable_items, it returns the uuid and drawable_type for each item.
 ///
 /// # Arguments
 ///
@@ -221,13 +214,12 @@ pub fn get_collision_summary(collision_results: CollisionResults) -> CollisionSu
 
 #[cfg(test)]
 mod tests {
-    use uuid::Uuid;
 
     use crate::{
         api::display::{Map, Point, TwoDVec},
         components::Drawable,
         entities::{player, Asteroid, Bullet, Player, ASTEROID_DAMAGE, BULLET_DAMAGE},
-        systems::{CollisionResult, PLAYER_ENEMY_COLLISION_DAMAGE},
+        systems::PLAYER_ENEMY_COLLISION_DAMAGE,
     };
 
     use super::{get_collision_summary, get_positions_with_overlaps, run_collision_detection};
@@ -272,7 +264,7 @@ mod tests {
     #[test]
     fn it_should_return_no_collisions_when_providing_player_and_ammunition() {
         let player = Player::new(Some(POSITION));
-        let ammunition = Bullet::new(POSITION);
+        let ammunition = Bullet::build_basic_bullet(POSITION);
 
         let drawable_states = vec![player.get_drawable_state(), ammunition.get_drawable_state()];
 
@@ -329,7 +321,7 @@ mod tests {
      */
     #[test]
     fn it_should_return_a_collision_for_a_asteroid_and_ammunition() {
-        let ammunition = Bullet::new(POSITION);
+        let ammunition = Bullet::build_basic_bullet(POSITION);
 
         let asteroid = get_asteroid_mock();
 
@@ -399,7 +391,7 @@ mod tests {
         let player = Player::new(Some(POSITION));
         let asteroid1 = get_asteroid_mock();
         let asteroid2 = get_asteroid_mock();
-        let ammunition = Bullet::new(POSITION);
+        let ammunition = Bullet::build_basic_bullet(POSITION);
 
         let drawable_states = vec![
             player.get_drawable_state(),

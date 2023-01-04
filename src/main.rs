@@ -17,5 +17,6 @@ fn main() {
     let mut app = App::new().unwrap();
 
     let val = app.run();
+    dbg!("HERE");
     dbg!(val);
 }

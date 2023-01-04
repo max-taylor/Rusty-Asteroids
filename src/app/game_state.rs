@@ -22,6 +22,12 @@ impl GameState {
         self.running
     }
 
+    pub fn stop_game(&mut self) -> &mut Self {
+        self.running = false;
+
+        self
+    }
+
     pub fn start_game(&mut self) -> &mut Self {
         self.running = true;
 

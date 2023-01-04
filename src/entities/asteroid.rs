@@ -1,17 +1,11 @@
 use crossterm::style::Color;
-use rand::Rng;
 
 use crate::{
-    api::display::{
-        element::{DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
-        Element, Layout, Point,
-    },
+    api::display::{Layout, Point},
     components::{get_updated_health, Drawable, DrawableState, DrawableType, Health},
 };
 
 use super::consts::ASTEROID;
-
-const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
 
 pub const ASTEROID_DAMAGE: u32 = 1;
 

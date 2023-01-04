@@ -17,8 +17,6 @@ pub struct Bullet {
 
 pub const BULLET_DAMAGE: u32 = 1;
 
-const ARROW_ELEMENT: Element = Element::new('^', DEFAULT_BACKGROUND, DEFAULT_FOREGROUND);
-
 impl Bullet {
     pub fn build_basic_bullet(location: Point<i64>) -> Self {
         let map = Layout::from_ascii(BASIC_BULLET, Color::White);
@@ -43,7 +41,7 @@ impl Bullet {
         let map = Layout::from_ascii(SPREAD_BULLET, Color::White);
 
         let velocity: Point<i64> = Point {
-            height: -20,
+            height: -10,
             width: 0,
         };
 

@@ -5,7 +5,6 @@ use crate::api::display::DisplayControllerError;
 #[derive(Debug)]
 pub enum AppError {
     OutOfLives,
-    Shutdown,
     DisplayControllerError(DisplayControllerError),
 }
 
