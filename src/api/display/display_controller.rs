@@ -8,7 +8,7 @@ use crossterm::{
     ErrorKind as CrosstermError,
 };
 
-use crate::components::Drawable;
+use crate::components::DrawableState;
 
 use super::{display_controller_error::DisplayControllerError, Map};
 use super::{
@@ -51,8 +51,6 @@ impl DisplayController {
             // The offset is where all drawing will be done, this is the center of the terminal screen
             offset: (screen_size - *dimensions) / Point::new(2, 2),
         })
-
-        // controller.setup().print_display()?.flush();
     }
 
     pub fn start(&mut self) -> &mut Self {
@@ -80,7 +78,10 @@ impl DisplayController {
         self
     }
 
-    pub fn draw_drawable(&mut self, drawable: &Drawable) -> DisplayControllerResult<&mut Self> {
+    pub fn draw_drawable(
+        &mut self,
+        drawable: &DrawableState,
+    ) -> DisplayControllerResult<&mut Self> {
         let base_location = drawable.location + self.offset;
         // Iterate over each row in the map
         for (num_row, drawable_row) in drawable.map.map.iter().enumerate() {

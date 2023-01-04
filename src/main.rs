@@ -8,11 +8,27 @@ mod systems;
 use crate::api::display::Point;
 use app::App;
 
-fn main() {
-    let mut app = App::new(Point::new(60, 40)).unwrap();
+use entities::{Controller, Player};
 
-    app.run(|loop_state, display| {
+fn main() {
+    let dimensions = &Point {
+        width: 60,
+        height: 40,
+    };
+
+    let mut player = Player::new();
+
+    let mut app = App::new(dimensions).unwrap();
+
+    app.run(|game_state, display_controller, drawable_controller| {
+        if let Some(event) = &game_state.keyboard_event {
+            player.handle_event(&event);
+        }
+
         // Game logic
+        display_controller.draw_drawable(&player.drawable)?;
+
+        Ok(())
     })
     .unwrap()
 }

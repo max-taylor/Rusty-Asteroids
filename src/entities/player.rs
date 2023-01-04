@@ -2,13 +2,13 @@ use crossterm::event::KeyCode;
 
 use crate::{
     api::display::{Map, Point},
-    components::Drawable,
+    components::{Drawable, DrawableState},
 };
 
 use super::{consts::SPACE_SHIP, controller::create_event, Controller};
 
 pub struct Player {
-    pub drawable: Drawable,
+    pub drawable: DrawableState,
 }
 
 impl Player {
@@ -21,7 +21,7 @@ impl Player {
         let map = Map::from_ascii(SPACE_SHIP);
 
         Self {
-            drawable: Drawable {
+            drawable: DrawableState {
                 map,
                 location,
                 velocity: 1,
@@ -30,7 +30,14 @@ impl Player {
     }
 }
 
+impl Drawable for Player {
+    fn get_drawable_state(&self) -> &DrawableState {
+        &self.drawable
+    }
+}
+
 impl Controller for Player {
+    // TODO: Collision detection for the boundaries here
     fn up(&mut self) -> &mut Self {
         self.drawable.location.height -= self.drawable.velocity;
 

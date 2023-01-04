@@ -7,16 +7,19 @@ use crossterm::{
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Map, Point},
+    entities::Borders,
     game_state::GameState,
+    systems::drawable::DrawableController,
 };
 
 pub struct App {
     display_controller: DisplayController,
     game_state: GameState,
+    borders: Borders,
 }
 
 impl App {
-    pub fn new(dimensions: Point) -> Result<App, DisplayControllerError> {
+    pub fn new(dimensions: &Point) -> Result<App, DisplayControllerError> {
         enable_raw_mode().map_err(DisplayControllerError::from_crossterm_error)?;
 
         let display_controller = DisplayController::new(&dimensions);
@@ -30,6 +33,7 @@ impl App {
         Ok(App {
             display_controller: display_controller.unwrap(),
             game_state: GameState::new(),
+            borders: Borders::new(dimensions)?,
         })
     }
 
@@ -43,7 +47,11 @@ impl App {
 
     pub fn run<F>(&mut self, mut frame_action: F) -> Result<(), DisplayControllerError>
     where
-        F: FnMut(&mut GameState, &mut Map),
+        F: FnMut(
+            &mut GameState,
+            &mut DisplayController,
+            &mut DrawableController,
+        ) -> Result<(), DisplayControllerError>,
     {
         self.game_state.start_game();
         self.display_controller.start();
@@ -65,13 +73,20 @@ impl App {
                         self.game_state.keyboard_event = Some(event);
                     }
 
-                    frame_action(&mut self.game_state, &mut self.display_controller.display);
+                    let drawable_controller: DrawableController = Default::default();
 
-                    self.display_controller.print_display()?;
+                    // drawable_controller.add_drawable_entity(&self.borders);
 
-                    // TODO: Handle collison detections with the updated map that is returned
+                    frame_action(
+                        &mut self.game_state,
+                        &mut self.display_controller,
+                        // Creating a new instance of the drawable controller each loop, inefficient but simplifies development
+                        &mut Default::default(),
+                    )?;
 
-                    // frame_action();
+                    self.display_controller
+                        .draw_drawable(&self.borders.drawable)?
+                        .print_display()?;
                 }
 
                 Ok(())

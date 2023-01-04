@@ -1,6 +1,6 @@
-use crate::components::Drawable;
+use crate::components::DrawableState;
 
 pub struct Bullet {
-    pub drawable: Drawable,
+    pub drawable: DrawableState,
     pub move_speed: u32,
 }
