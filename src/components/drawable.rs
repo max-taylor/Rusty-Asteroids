@@ -51,12 +51,6 @@ pub trait Drawable {
                 panic!("Missing required dimensions for rendering player");
             }
 
-            let dimensions = dimensions.unwrap();
-            let drawable_dimensions = drawable_state.layout.dimensions;
-
-            let max_height = dimensions.height - drawable_dimensions.height;
-            let max_width = dimensions.width - drawable_dimensions.width;
-
             if updated_position.height < 0 {
                 updated_position.height = 0;
             }
@@ -64,6 +58,13 @@ pub trait Drawable {
             if updated_position.width < 0 {
                 updated_position.width = 0;
             }
+
+            let dimensions = dimensions.unwrap();
+
+            let drawable_dimensions = drawable_state.layout.dimensions;
+
+            let max_height = dimensions.height - drawable_dimensions.height;
+            let max_width = dimensions.width - drawable_dimensions.width;
 
             if updated_position.height > max_height {
                 updated_position.height = max_height;

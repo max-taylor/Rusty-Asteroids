@@ -1,10 +1,6 @@
-use rand::Rng;
 use std::{io::stdout, panic, time::Duration};
 
-use crossterm::{
-    event::{poll, read, Event, KeyCode},
-    terminal::size,
-};
+use crossterm::event::{poll, read, Event, KeyCode};
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
@@ -92,10 +88,6 @@ impl App {
                         spawn_in_loops = SPAWN_GAME_LOOPS;
                     }
 
-                    // let test_items: Vec<Box<dyn Drawable>> = Vec::new():
-
-                    // let entities_in_frame: Vec<dyn Drawable> = vec![self.player, self.borders];
-
                     if let Some(event) = &self.game_state.keyboard_event {
                         self.player.handle_event(&event);
                     }
@@ -109,13 +101,10 @@ impl App {
                 Ok(())
             },
         ));
-        //   if let Err(_) = result {
-        //     DisplayController::close(&mut self.display_controller.target)?;
-        // }
 
         self.shut_down()?;
+
         result.unwrap()
-        // Ok(())
     }
 
     fn update_positions(&mut self) -> &mut Self {
@@ -157,13 +146,8 @@ impl App {
             &mut self.display_controller,
             &mut self.player.bullets.entities,
         );
-        // self.display_controller
-        // TODO: Handle deleting items if there are removed from drawing
-        // self.display_controller
-        //     .draw_drawable(&self.borders)?
-        //     .draw_drawable(&self.player)?
-        //     .draw_vec_drawable(self.player.bullets.entities.iter().collect())?
-        //     .draw_vec_drawable(self.asteroids.iter().collect())?;
+
+        App::draw_vec(&mut self.display_controller, &mut self.asteroids);
 
         Ok(self)
     }
@@ -176,8 +160,7 @@ impl App {
     }
 
     pub fn shut_down(&mut self) -> Result<(), DisplayControllerError> {
-        dbg!("Shutting down");
-        self.output.close();
+        self.output.close()?;
 
         Ok(())
     }
