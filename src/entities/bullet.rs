@@ -29,7 +29,7 @@ impl Bullet {
         let map = Layout::from_map(asteroid, Some(ARROW_ELEMENT));
 
         let velocity: Point<i64> = Point {
-            height: -2,
+            height: -20,
             width: 0,
         };
 

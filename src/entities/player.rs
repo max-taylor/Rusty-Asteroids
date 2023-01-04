@@ -9,11 +9,11 @@ use super::{consts::SPACE_SHIP, controller::create_event, Bullet, Controller};
 
 pub struct Player {
     pub drawable: DrawableState,
-    pub bullets: Spawnable<Bullet>,
+    pub bullets: Vec<Bullet>,
 }
 
-const WIDTH_MAX_VELOCITY: i64 = 4;
-const HEIGHT_MAX_VELOCITY: i64 = 2;
+const WIDTH_MAX_VELOCITY: i64 = 33;
+const HEIGHT_MAX_VELOCITY: i64 = 20;
 
 trait CanSpawn {
     fn get_spawnable_entities<T>(&self) -> Spawnable<T>;
@@ -36,7 +36,6 @@ impl Player {
 
     pub fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
         self.bullets
-            .entities
             .iter()
             .map(|asteroid| asteroid.get_drawable_state())
             .collect()
@@ -95,7 +94,7 @@ impl Controller for Player {
                 .add_width(self.drawable.layout.dimensions.width / 2 - 1)
                 .add_height(1);
 
-            self.bullets.spawn(Bullet::new(spawn_position));
+            self.bullets.push(Bullet::new(spawn_position));
         }
 
         self

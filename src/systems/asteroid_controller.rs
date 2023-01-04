@@ -22,15 +22,15 @@ fn get_random_in_range(start: i64, end: i64) -> i64 {
 
 fn get_asteroid_spawn_location(dimensions: &Point<i64>) -> Point<i64> {
     Point {
-        height: 0,
+        height: -3,
         width: get_random_in_range(0, dimensions.width),
     }
 }
 
 fn get_asteroid_velocity() -> Point<i64> {
     Point {
-        width: get_random_in_range(-4, 4),
-        height: get_random_in_range(1, 5),
+        width: get_random_in_range(0, 20),
+        height: get_random_in_range(1, 40),
     }
 }
 

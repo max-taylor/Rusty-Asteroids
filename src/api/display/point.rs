@@ -6,6 +6,24 @@ pub struct Point<T> {
     pub height: T,
 }
 
+impl From<i64> for Point<i64> {
+    fn from(value: i64) -> Self {
+        Point {
+            width: value,
+            height: value,
+        }
+    }
+}
+
+impl From<u128> for Point<i64> {
+    fn from(value: u128) -> Self {
+        Point {
+            width: value as i64,
+            height: value as i64,
+        }
+    }
+}
+
 // impl<T> From<&Point<T>> for MoveTo
 // where
 //     u16: From<T>,

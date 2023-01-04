@@ -1,5 +1,7 @@
 use crossterm::style::Color;
 
+use crate::components::DrawableState;
+
 pub const DEFAULT_BACKGROUND: Color = Color::Black;
 pub const DEFAULT_FOREGROUND: Color = Color::Blue;
 
@@ -8,6 +10,7 @@ pub struct Element {
     pub value: char,
     pub background: Color,
     pub foreground: Color,
+    // pub parent: &DrawableState,
 }
 
 impl Default for Element {

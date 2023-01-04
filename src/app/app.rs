@@ -4,7 +4,7 @@ use crossterm::event::{poll, read, Event, KeyCode};
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
-    components::{Drawable, DrawableState},
+    components::{update_position_for_drawable_vec, Drawable, DrawableState},
     entities::{Borders, Controller, Player},
     helpers::get_now,
     systems::{run_collision_detection, AsteroidController},
@@ -91,21 +91,11 @@ impl App {
                     self.asteroid_controller
                         .handle_game_loop(game_loop_duration);
 
-                    self.update_positions();
+                    self.update_positions(game_loop_duration);
 
-                    let states = self.asteroid_controller.get_all_drawable_states();
-
-                    let mut drawable_items: Vec<&DrawableState> =
-                        vec![self.player.get_drawable_state()];
-
-                    drawable_items.append(&mut self.asteroid_controller.get_all_drawable_states());
-                    drawable_items.append(&mut self.player.get_all_drawable_states());
-
-                    run_collision_detection(drawable_items, &self.dimensions);
+                    run_collision_detection(self.get_all_drawable_states(), &self.dimensions);
 
                     self.draw_all_entities()?;
-
-                    self.output.print_display(&self.display_controller.layout)?;
                 }
                 Ok(())
             },
@@ -116,21 +106,27 @@ impl App {
         result.unwrap()
     }
 
-    fn update_positions(&mut self) -> &mut Self {
-        self.player.update_position(Some(&self.dimensions));
+    fn update_positions(&mut self, game_loop_duration: u128) -> &mut Self {
+        self.player
+            .update_position(Some(&self.dimensions), game_loop_duration);
 
-        self.player.bullets.entities.iter_mut().for_each(|bullet| {
-            bullet.update_position(None);
-        });
+        update_position_for_drawable_vec(&mut self.player.bullets, game_loop_duration);
 
-        self.asteroid_controller
-            .asteroids
-            .iter_mut()
-            .for_each(|asteroid| {
-                asteroid.update_position(None);
-            });
+        update_position_for_drawable_vec(
+            &mut self.asteroid_controller.asteroids,
+            game_loop_duration,
+        );
 
         self
+    }
+
+    fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
+        let mut drawable_items: Vec<&DrawableState> = vec![self.player.get_drawable_state()];
+
+        drawable_items.append(&mut self.asteroid_controller.get_all_drawable_states());
+        drawable_items.append(&mut self.player.get_all_drawable_states());
+
+        drawable_items
     }
 
     /// Method to handle drawing all the entities that will be rendered
@@ -139,11 +135,12 @@ impl App {
         self.display_controller.draw_drawable(&self.borders)?;
         self.display_controller.draw_drawable(&self.player)?;
 
-        self.display_controller
-            .draw_vec(&mut self.player.bullets.entities);
+        self.display_controller.draw_vec(&mut self.player.bullets);
 
         self.display_controller
             .draw_vec(&mut self.asteroid_controller.asteroids);
+
+        self.output.print_display(&self.display_controller.layout)?;
 
         Ok(self)
     }
