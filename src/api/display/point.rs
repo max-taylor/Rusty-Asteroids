@@ -1,25 +1,27 @@
-use std::ops::{Add, Div, Mul, Sub};
-
-use crossterm::cursor::MoveTo;
-
-use crate::components::Velocity;
+use std::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Point {
-    pub width: u32,
-    pub height: u32,
+pub struct Point<T> {
+    pub width: T,
+    pub height: T,
 }
 
-impl From<&Point> for MoveTo {
-    fn from(point: &Point) -> Self {
-        Self(
-            point.width.try_into().unwrap(),
-            point.height.try_into().unwrap(),
-        )
-    }
-}
+// impl<T> From<&Point<T>> for MoveTo
+// where
+//     u16: From<T>,
+// {
+//     fn from(point: &Point<T>) -> Self {
+//         Self(
+//             point.width.try_into().unwrap(),
+//             point.height.try_into().unwrap(),
+//         )
+//     }
+// }
 
-impl Default for Point {
+impl<T> Default for Point<T>
+where
+    T: AddAssign + SubAssign + Default,
+{
     fn default() -> Self {
         Self {
             width: Default::default(),
@@ -28,47 +30,53 @@ impl Default for Point {
     }
 }
 
-impl Point {
-    pub const fn new(width: u32, height: u32) -> Self {
+impl<T> Point<T>
+where
+    T: AddAssign + SubAssign + Default,
+{
+    pub const fn new(width: T, height: T) -> Self {
         Self { width, height }
     }
 
-    pub fn add_width(mut self, width: u32) -> Self {
+    pub fn add_width(mut self, width: T) -> Self {
         self.width += width;
 
         self
     }
 
-    pub fn sub_width(mut self, width: u32) -> Self {
+    pub fn sub_width(mut self, width: T) -> Self {
         self.width -= width;
 
         self
     }
 
-    pub fn add_height(mut self, height: u32) -> Self {
+    pub fn add_height(mut self, height: T) -> Self {
         self.height += height;
 
         self
     }
 
-    pub fn sub_height(mut self, height: u32) -> Self {
+    pub fn sub_height(mut self, height: T) -> Self {
         self.height -= height;
 
         self
     }
 
-    pub const fn default() -> Self {
+    pub fn default() -> Self {
         Self {
-            width: 0,
-            height: 0,
+            width: Default::default(),
+            height: Default::default(),
         }
     }
 }
 
-impl Add for Point {
-    type Output = Point;
+impl<T> Add for Point<T>
+where
+    T: Add<Output = T>,
+{
+    type Output = Point<T>;
 
-    fn add(self, other: Point) -> Point {
+    fn add(self, other: Point<T>) -> Self::Output {
         Point {
             width: self.width + other.width,
             height: self.height + other.height,
@@ -76,10 +84,13 @@ impl Add for Point {
     }
 }
 
-impl Sub for Point {
-    type Output = Point;
+impl<T> Sub for Point<T>
+where
+    T: Sub<Output = T>,
+{
+    type Output = Point<T>;
 
-    fn sub(self, other: Point) -> Point {
+    fn sub(self, other: Point<T>) -> Self::Output {
         Point {
             width: self.width - other.width,
             height: self.height - other.height,
@@ -87,10 +98,13 @@ impl Sub for Point {
     }
 }
 
-impl Mul for Point {
-    type Output = Point;
+impl<T> Mul for Point<T>
+where
+    T: Mul<Output = T>,
+{
+    type Output = Point<T>;
 
-    fn mul(self, other: Point) -> Point {
+    fn mul(self, other: Point<T>) -> Self::Output {
         Point {
             width: self.width * other.width,
             height: self.height * other.height,
@@ -98,10 +112,13 @@ impl Mul for Point {
     }
 }
 
-impl Div for Point {
-    type Output = Point;
+impl<T> Div for Point<T>
+where
+    T: Div<Output = T>,
+{
+    type Output = Point<T>;
 
-    fn div(self, other: Point) -> Point {
+    fn div(self, other: Point<T>) -> Self::Output {
         Point {
             width: self.width / other.width,
             height: self.height / other.height,

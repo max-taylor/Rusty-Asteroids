@@ -10,7 +10,7 @@ use app::App;
 use entities::{Controller, Player};
 
 fn main() {
-    let dimensions = &Point {
+    let dimensions: &Point<u32> = &Point {
         width: 60,
         height: 40,
     };

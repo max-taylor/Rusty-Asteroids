@@ -17,7 +17,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(dimensions: &Point) -> Result<App, DisplayControllerError> {
+    pub fn new(dimensions: &Point<u32>) -> Result<App, DisplayControllerError> {
         let mut output = Output::new(stdout());
         let display_controller = DisplayController::new(&dimensions, true);
 

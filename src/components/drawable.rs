@@ -37,7 +37,7 @@ impl Default for Velocity {
 #[derive(Debug)]
 pub struct DrawableState {
     pub layout: Layout,
-    pub location: Point,
+    pub location: Point<u32>,
     /// velocity in x-y (width, height)
     pub velocity: Velocity,
 }
@@ -50,7 +50,7 @@ enum Type {
 }
 
 impl DrawableState {
-    pub fn new(layout: Layout, location: Point) -> Self {
+    pub fn new(layout: Layout, location: Point<u32>) -> Self {
         Self {
             layout,
             location,

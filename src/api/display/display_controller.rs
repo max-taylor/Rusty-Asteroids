@@ -6,7 +6,7 @@ use super::Point;
 use super::{display_controller_error::DisplayControllerError, Layout};
 
 pub struct DisplayController {
-    offset: Point,
+    offset: Point<u32>,
     // entities: Vec<&Point>,
     pub layout: Layout,
 }
@@ -23,7 +23,10 @@ impl DisplayController {
     /// * `dimensions` - The controllable area
     ///
     /// ```
-    pub fn new(dimensions: &Point, enable_offset: bool) -> Result<Self, DisplayControllerError> {
+    pub fn new(
+        dimensions: &Point<u32>,
+        enable_offset: bool,
+    ) -> Result<Self, DisplayControllerError> {
         let (rows, columns) = size().unwrap();
 
         if dimensions.height > columns.into() || dimensions.width > rows.into() {

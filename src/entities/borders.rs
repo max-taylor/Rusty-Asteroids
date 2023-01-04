@@ -9,7 +9,7 @@ pub struct Borders {
 }
 
 impl Borders {
-    pub fn new(dimensions: &Point) -> Result<Self, DisplayControllerError> {
+    pub fn new(dimensions: &Point<u32>) -> Result<Self, DisplayControllerError> {
         let mut drawable = DrawableState {
             layout: Layout::new(dimensions, None),
             location: Point::default(),

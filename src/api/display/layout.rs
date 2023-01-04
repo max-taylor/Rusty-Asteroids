@@ -7,7 +7,7 @@ use super::{
 pub struct Layout {
     /// A Map is a 2D vector, where the Vec<_> are rows and Vec<Vec<_>> are items in a row
     pub map: Vec<Vec<Option<Element>>>,
-    pub dimensions: Point,
+    pub dimensions: Point<u32>,
     pub default_element: Option<Element>,
 }
 
@@ -24,7 +24,7 @@ impl Layout {
     /// # Arguments
     ///
     /// * `dimensions` - The x-y dimensions of the map
-    pub fn new(dimensions: &Point, default_element: Option<Element>) -> Self {
+    pub fn new(dimensions: &Point<u32>, default_element: Option<Element>) -> Self {
         Self {
             map: vec![vec![default_element; dimensions.width as usize]; dimensions.height as usize],
             dimensions: *dimensions,
@@ -120,7 +120,7 @@ impl Layout {
     //     Ok(items)
     // }
 
-    pub fn get_element_mut(&mut self, point: &Point) -> MapResult<&mut Option<Element>> {
+    pub fn get_element_mut(&mut self, point: &Point<u32>) -> MapResult<&mut Option<Element>> {
         let row = self.get_row_mut(point.height)?;
 
         let element = row
@@ -130,7 +130,7 @@ impl Layout {
         Ok(element)
     }
 
-    pub fn get_element(&self, point: &Point) -> MapResult<&Option<Element>> {
+    pub fn get_element(&self, point: &Point<u32>) -> MapResult<&Option<Element>> {
         let row = self.get_row(point.height)?;
 
         let element = row
@@ -142,8 +142,8 @@ impl Layout {
 
     pub fn draw_rect(
         &mut self,
-        start_position: &Point,
-        dimensions: &Point,
+        start_position: &Point<u32>,
+        dimensions: &Point<u32>,
         element: Element,
     ) -> Result<&mut Self, DisplayControllerError> {
         self.draw_line(
@@ -179,7 +179,7 @@ impl Layout {
         &mut self,
         element: Element,
         len: u32,
-        start_position: &Point,
+        start_position: &Point<u32>,
         direction: Direction,
     ) -> Result<&mut Self, DisplayControllerError> {
         match direction {
@@ -206,7 +206,7 @@ impl Layout {
     pub fn draw_item(
         &mut self,
         element: Element,
-        position: &Point,
+        position: &Point<u32>,
     ) -> Result<&mut Self, DisplayControllerError> {
         // Position is exclusive of the dimension borders
         if position.width >= self.dimensions.width || position.height >= self.dimensions.height {
@@ -230,7 +230,7 @@ mod tests {
     const WIDTH: u32 = 30;
     const HEIGHT: u32 = 20;
 
-    const DIMENSIONS: &Point = &Point::new(WIDTH, HEIGHT);
+    const DIMENSIONS: &Point<u32> = &Point::new(WIDTH, HEIGHT);
 
     const DEFAULT_ELEMENT: Element = Element::default();
 
