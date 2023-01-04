@@ -12,7 +12,7 @@ pub struct Borders<'dimensions> {
 
 impl<'dimensions> Borders<'dimensions> {
     pub fn new(dimensions: &'dimensions Point) -> Self {
-        let map = Map::new(dimensions);
+        let map = Map::new(dimensions, None);
         // TODO modify map for actual borders
 
         let position = Position::new(map, Point::home_point(), 0);

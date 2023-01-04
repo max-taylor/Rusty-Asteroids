@@ -53,9 +53,9 @@ impl<'dimensions> App<'dimensions> {
                 break;
             }
 
-            if event == Event::Key(KeyCode::Left.into()) {}
+            // if event == Event::Key(KeyCode::Left.into()) {}
 
-            self.player.handle_event(event);
+            // self.player.handle_event(event);
 
             // TODO: Could try and simulate a framerate, as in don't return responses immediately return them on an interval
         }

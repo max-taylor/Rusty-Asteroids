@@ -8,6 +8,8 @@ use crossterm::{
     ErrorKind as CrosstermError,
 };
 
+use crate::components::Drawable;
+
 use super::{display_controller_error::DisplayControllerError, Map};
 use super::{
     element::{Element, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND},
@@ -17,6 +19,7 @@ use super::{
 pub struct DisplayController<'dimensions> {
     dimensions: &'dimensions Point,
     offset: Point,
+    // entities: Vec<&Point>,
     screen_size: Point,
     display: Map,
     default_element: Element,
@@ -28,8 +31,10 @@ pub enum Direction {
     Horizontal,
 }
 
-const BORDER_ELEMENT: Element = Element::new('x', Color::Black, Color::Black);
+const BORDER_ELEMENT: Element = Element::new('x', Color::Blue, Color::Blue);
 const PADDING: Point = Point::new(10, 10);
+
+type DisplayControllerResult<T> = Result<T, DisplayControllerError>;
 
 // TODO -> This x/y business is annoying, change to rows/columns or make it clearer
 
@@ -48,29 +53,20 @@ impl<'dimensions> DisplayController<'dimensions> {
             return Err(DisplayControllerError::DisplayTooSmallForDimensions);
         }
 
+        // Display is the size of the screen
         let screen_size = Point::new(columns as u32, rows as u32);
 
-        dbg!(&screen_size);
-
-        // Make game size of terminal and draw dimensions in middle
-
         let mut controller = DisplayController {
-            display: Map::new(&screen_size),
+            display: Map::new(&screen_size, None),
             target: stdout(),
             dimensions: &dimensions,
             default_element: Element::default(),
             screen_size,
+            // The offset is where all drawing will be done, this is the center of the terminal screen
             offset: (screen_size - *dimensions) / Point::new(2, 2),
         };
 
-        dbg!(controller.offset);
-
-        controller
-            .setup()
-            .draw_borders()?
-            .print_display()?
-            // .print_display()?
-            .flush();
+        controller.setup().draw_borders()?.print_display()?.flush();
 
         Ok(controller)
     }
@@ -79,13 +75,17 @@ impl<'dimensions> DisplayController<'dimensions> {
         self.draw_rect(
             &Point::new(0, 0),
             self.dimensions,
-            Element::new('x', Color::Blue, Color::Green),
+            Element::new('x', Color::Blue, Color::Blue),
         )
     }
 
     fn setup(&mut self) -> &mut Self {
         queue!(self.target, EnterAlternateScreen, Hide).unwrap();
 
+        self
+    }
+
+    fn add_entity(&mut self, entity: &Point) -> &mut Self {
         self
     }
 
@@ -164,19 +164,39 @@ impl<'dimensions> DisplayController<'dimensions> {
 
         let updated_positions = self.offset + *position;
 
-        dbg!(updated_positions);
+        let existing_element = self.display.get_element_mut(&updated_positions)?;
+        // let row = self
+        //     .display
+        //     .map
+        //     .get_mut(updated_positions.y as usize)
+        //     .ok_or(DisplayControllerError::PositionOutOfRange)?;
 
-        let row = self
-            .display
-            .map
-            .get_mut(updated_positions.y as usize)
-            .ok_or(DisplayControllerError::PositionOutOfRange)?;
+        *existing_element = Some(element);
 
         // This could instead just have the .insert chained on the above expression to replace the item, but this is a bit more verbose for my learning
-        if let Some(existing_item) = row[updated_positions.x as usize].as_mut() {
-            *existing_item = element;
-        } else {
-            row[updated_positions.x as usize] = Some(element);
+        // if let Some(existing_item) = existing_element {
+        //     *existing_item = element;
+        // } else {
+        //     *existing_element = Some(element);
+        // }
+
+        Ok(self)
+    }
+
+    fn draw_drawable(&mut self, drawable: &Drawable) -> DisplayControllerResult<&mut Self> {
+        for drawable_row in drawable.map.map.iter() {
+            for element in drawable_row.iter() {
+                if let Some(has_element) = element {
+                    // self.draw_item(has_element, position)
+                }
+            }
+            // let display_row = self.display.get_row_mut(drawable.location.y)?;
+
+            // let row = self
+            //     .display
+            //     .map
+            //     .get_mut(drawable.location.x as usize)
+            //     .ok_or(DisplayControllerError::PositionOutOfRange);
         }
 
         Ok(self)

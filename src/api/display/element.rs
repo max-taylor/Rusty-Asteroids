@@ -1,7 +1,7 @@
 use crossterm::style::Color;
 
-pub const DEFAULT_BACKGROUND: Color = Color::Red;
-pub const DEFAULT_FOREGROUND: Color = Color::Red;
+pub const DEFAULT_BACKGROUND: Color = Color::Black;
+pub const DEFAULT_FOREGROUND: Color = Color::Black;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Element {
@@ -13,8 +13,7 @@ pub struct Element {
 impl Default for Element {
     fn default() -> Self {
         Self {
-            // value: Default::default(),
-            value: '&',
+            value: ' ',
             background: DEFAULT_BACKGROUND,
             foreground: DEFAULT_FOREGROUND,
         }
@@ -27,6 +26,14 @@ impl Element {
             value,
             background,
             foreground,
+        }
+    }
+
+    pub fn new_default_colors(value: char) -> Self {
+        Self {
+            value,
+            background: DEFAULT_BACKGROUND,
+            foreground: DEFAULT_FOREGROUND,
         }
     }
 }
