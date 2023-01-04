@@ -4,10 +4,10 @@ use crossterm::event::{poll, read, Event, KeyCode};
 
 use crate::{
     api::display::{DisplayController, DisplayControllerError, Output, Point},
-    components::Drawable,
+    components::{Drawable, DrawableState},
     entities::{Borders, Controller, Player},
     helpers::get_now,
-    systems::AsteroidController,
+    systems::{run_collision_detection, AsteroidController},
 };
 
 use super::game_state::GameState;
@@ -91,7 +91,19 @@ impl App {
                     self.asteroid_controller
                         .handle_game_loop(game_loop_duration);
 
-                    self.update_positions().draw_all_entities()?;
+                    self.update_positions();
+
+                    let states = self.asteroid_controller.get_all_drawable_states();
+
+                    let mut drawable_items: Vec<&DrawableState> =
+                        vec![self.player.get_drawable_state()];
+
+                    drawable_items.append(&mut self.asteroid_controller.get_all_drawable_states());
+                    drawable_items.append(&mut self.player.get_all_drawable_states());
+
+                    run_collision_detection(drawable_items, &self.dimensions);
+
+                    self.draw_all_entities()?;
 
                     self.output.print_display(&self.display_controller.layout)?;
                 }

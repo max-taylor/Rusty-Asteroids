@@ -1,4 +1,5 @@
 use crossterm::style::Color;
+use uuid::Uuid;
 
 use crate::{
     api::display::{element::DEFAULT_BACKGROUND, DisplayControllerError, Element, Layout, Point},
@@ -17,6 +18,7 @@ impl Borders {
             location: Point::default(),
             velocity: Default::default(),
             drawable_type: DrawableType::Border,
+            uuid: Uuid::new_v4(),
         };
 
         drawable.layout.draw_rect(

@@ -34,6 +34,14 @@ impl Player {
         }
     }
 
+    pub fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
+        self.bullets
+            .entities
+            .iter()
+            .map(|asteroid| asteroid.get_drawable_state())
+            .collect()
+    }
+
     // TODO: Implement different bullet types
     // pub fn get_spawnable_entities(&self) -> Spawnable<Bullet> {
     // self.bullets

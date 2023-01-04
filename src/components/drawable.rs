@@ -1,4 +1,5 @@
 use crate::api::display::{Layout, Point};
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct DrawableState {
@@ -6,9 +7,10 @@ pub struct DrawableState {
     pub location: Point<i64>,
     pub velocity: Point<i64>,
     pub drawable_type: DrawableType,
+    pub uuid: Uuid,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum DrawableType {
     Player,
     Enemy,
@@ -29,6 +31,7 @@ impl DrawableState {
             location,
             drawable_type,
             velocity: velocity.unwrap_or(Default::default()),
+            uuid: Uuid::new_v4(),
         }
     }
 }

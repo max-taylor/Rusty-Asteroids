@@ -1,4 +1,9 @@
-use crate::{api::display::Point, entities::Asteroid, helpers::get_now};
+use crate::{
+    api::display::Point,
+    components::{Drawable, DrawableState},
+    entities::Asteroid,
+    helpers::get_now,
+};
 use rand::Rng;
 
 pub struct AsteroidController {
@@ -56,5 +61,12 @@ impl AsteroidController {
         }
 
         self
+    }
+
+    pub fn get_all_drawable_states(&self) -> Vec<&DrawableState> {
+        self.asteroids
+            .iter()
+            .map(|asteroid| asteroid.get_drawable_state())
+            .collect()
     }
 }

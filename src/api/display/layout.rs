@@ -5,10 +5,12 @@ use super::{
     DisplayControllerError, Point,
 };
 
+type Map = Vec<Vec<Option<Element>>>;
+
 #[derive(Debug)]
 pub struct Layout {
     /// A Map is a 2D vector, where the Vec<_> are rows and Vec<Vec<_>> are items in a row
-    pub map: Vec<Vec<Option<Element>>>,
+    pub map: Map,
     pub dimensions: Point<i64>,
     pub default_element: Option<Element>,
 }
@@ -20,6 +22,10 @@ pub enum Direction {
     Horizontal,
 }
 
+pub fn create_map<T: Clone>(dimensions: &Point<i64>, default_item: T) -> Vec<Vec<T>> {
+    vec![vec![default_item; dimensions.width as usize]; dimensions.height as usize]
+}
+
 impl Layout {
     /// Creates a new map with None values for initialization
     ///
@@ -28,7 +34,7 @@ impl Layout {
     /// * `dimensions` - The x-y dimensions of the map
     pub fn new(dimensions: &Point<i64>, default_element: Option<Element>) -> Self {
         Self {
-            map: vec![vec![default_element; dimensions.width as usize]; dimensions.height as usize],
+            map: create_map(dimensions, default_element),
             dimensions: *dimensions,
             default_element,
         }
