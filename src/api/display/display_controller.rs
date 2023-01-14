@@ -4,13 +4,10 @@ use uuid::Uuid;
 
 use crate::app::GameState;
 use crate::components::{Drawable, DrawableState, Health};
-use crate::helpers::{
-    get_is_position_outside_dimensions, get_is_position_outside_dimensions_with_offset,
-};
 use crate::systems::EntityController;
-use crate::user_display::{HEART, NUMBER_VECTOR};
+use crate::user_display::{HEART, NUMBER_VECTOR, X};
 
-use super::element::{parse_str_to_element_array, DEFAULT_BACKGROUND, DEFAULT_FOREGROUND};
+use super::element::DEFAULT_BACKGROUND;
 use super::{create_map, map_from_str, Element, Map, Point};
 use super::{display_controller_error::DisplayControllerError, Layout};
 
@@ -28,8 +25,6 @@ pub fn get_screen_size() -> Point<i64> {
     Point::new(rows as i64, columns as i64)
 }
 
-const LIFE_ELEMENT: Element = Element::new('♥', DEFAULT_BACKGROUND, Color::Red);
-
 impl DisplayController {
     /// Creates a new display controller, a display controller fills the entire screen but the provided dimensions will be the controllable area
     ///
@@ -44,7 +39,7 @@ impl DisplayController {
     ) -> Result<Self, DisplayControllerError> {
         let mut numbers: Vec<Map> = vec![create_map(&Default::default(), None); 10];
 
-        for idx in 0..9 {
+        for idx in 0..10 {
             numbers[idx] = map_from_str(NUMBER_VECTOR[idx], Color::Black);
         }
 
@@ -67,10 +62,20 @@ impl DisplayController {
             .draw_map(&heart_map, Point::new(5, 2), &Default::default())?;
 
         self.layout.draw_map(
-            &self.numbers[lives as usize],
-            Point::new(20, 2),
+            &map_from_str(X, Color::Black),
+            Point::new(19, 3),
             &Default::default(),
         )?;
+
+        self.draw_u32(lives, Point::new(27, 2))?;
+
+        self.draw_str("Lives", DEFAULT_BACKGROUND, Color::Red, Point::new(19, 0))?;
+
+        // self.layout.draw_map(
+        //     &self.numbers[lives as usize],
+        //     Point::new(20, 2),
+        //     &Default::default(),
+        // )?;
 
         // self.layout
         //     .draw_str(HEART, &Point::new(5, 2), None, Some(Color::Red))?;
@@ -88,6 +93,44 @@ impl DisplayController {
         // )?;
 
         Ok(self)
+    }
+
+    pub fn draw_u32(
+        &mut self,
+        numbers: u32,
+        start_position: Point<i64>,
+    ) -> DisplayControllerResult<()> {
+        let mut location = start_position;
+        for char in numbers.to_string().chars() {
+            let number_val: u32 = char.to_digit(10).unwrap();
+
+            self.layout.draw_map(
+                &map_from_str(NUMBER_VECTOR[number_val as usize], Color::Red),
+                location,
+                &Default::default(),
+            )?;
+
+            location = location.add_width(7);
+        }
+
+        Ok(())
+    }
+
+    pub fn draw_str(
+        &mut self,
+        str: &str,
+        background: Color,
+        foreground: Color,
+        start_position: Point<i64>,
+    ) -> DisplayControllerResult<()> {
+        let elements: Vec<Option<Element>> = str
+            .chars()
+            .map(|char| Some(Element::new(char, background, foreground)))
+            .collect();
+
+        self.layout.draw_element_array(elements, &start_position)?;
+
+        Ok(())
     }
 
     /// This method handles drawing drawable elements, it also skips over the drawing of an element if it is outside the range

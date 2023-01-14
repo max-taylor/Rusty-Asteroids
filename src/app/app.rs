@@ -110,10 +110,8 @@ impl App {
 
     pub fn run(&mut self) -> AppResult<()> {
         self.start()?;
-        dbg!("YO");
-        let result = self.run_game_loop();
 
-        dbg!("UHH");
+        let result = self.run_game_loop();
 
         if let Err(err) = result.as_ref() {
             match err {
@@ -221,9 +219,6 @@ impl App {
     /// Method to handle drawing all the entities that will be rendered
     fn draw_all_entities(&mut self) -> AppResult<&mut Self> {
         self.display_controller
-            .draw_drawable(&self.borders.get_drawable_state())?;
-
-        self.display_controller
             .draw_drawable(&self.player.get_drawable_state())?;
 
         // Draw all the entities in the bullet and asteroid controller
@@ -232,6 +227,9 @@ impl App {
 
         self.display_controller
             .draw_entity_controller_items(&mut self.asteroid_controller.entity_controller);
+
+        self.display_controller
+            .draw_drawable(&self.borders.get_drawable_state())?;
 
         self.display_controller
             .draw_game_state(&self.game_state, self.player.get_health())?;

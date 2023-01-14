@@ -24,7 +24,7 @@ impl Borders {
         drawable.layout.draw_rect(
             &Default::default(),
             dimensions,
-            Element::new('x', DEFAULT_BACKGROUND, Color::Red),
+            Element::new(' ', Color::Red, Color::Red),
         )?;
 
         Ok(Self { drawable })

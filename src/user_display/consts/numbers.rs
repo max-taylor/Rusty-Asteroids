@@ -1,3 +1,7 @@
+use crossterm::style::Color;
+
+use crate::api::display::{map_from_str, Map};
+
 pub const ZERO: &str = "000000
 00  00
 00  00
@@ -60,3 +64,7 @@ pub const NINE: &str = "999999
 
 pub const NUMBER_VECTOR: [&'static str; 10] =
     [ZERO, ONE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE];
+
+pub const X: &str = "xx xx
+  x
+xx xx";
