@@ -119,7 +119,7 @@ impl Layout {
         Layout::from_map(map, None)
     }
 
-    /// This method allows drawing an additional map ontop of the map contained within this layout. This is useful when drawing ascii art.
+    /// This method allows drawing an additional map on top of the map contained within this layout. This is useful when drawing ascii art.
     /// # Arguments
     ///
     /// * `map` - The map to draw
