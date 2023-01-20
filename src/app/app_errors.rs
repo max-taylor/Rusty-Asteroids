@@ -4,7 +4,6 @@ use crate::api::display::DisplayControllerError;
 
 #[derive(Debug)]
 pub enum AppError {
-    OutOfLives,
     DisplayControllerError(DisplayControllerError),
 }
 
@@ -19,3 +18,5 @@ impl From<ErrorKind> for AppError {
         Self::DisplayControllerError(DisplayControllerError::CrossTermWriteError)
     }
 }
+
+pub type AppResult<T> = Result<T, AppError>;

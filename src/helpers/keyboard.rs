@@ -5,9 +5,9 @@ use crossterm::{
     Result,
 };
 
-pub fn get_keyboard_event() -> Result<Option<Event>> {
+pub fn get_keyboard_event(delay: u64) -> Result<Option<Event>> {
     // Handle keyboard presses
-    if poll(Duration::from_millis(100))? {
+    if poll(Duration::from_millis(delay))? {
         let event = read()?;
 
         return Ok(Some(event));

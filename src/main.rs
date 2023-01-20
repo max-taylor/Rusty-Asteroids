@@ -6,13 +6,17 @@ mod helpers;
 mod systems;
 mod user_display;
 
-use app::App;
+use std::io::stdout;
+
+use app::{App, AppManager};
+
+use crate::api::display::{get_screen_size, Output};
 
 // Run tests with logging: cargo test -- --nocapture
 fn main() {
-    let mut app = App::new().unwrap();
+    let screen_size = get_screen_size();
 
-    let val = app.run();
-    dbg!("HERE");
-    dbg!(val);
+    let mut app_manager = AppManager::new(screen_size).unwrap();
+
+    app_manager.run();
 }

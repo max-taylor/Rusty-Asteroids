@@ -4,7 +4,7 @@ pub struct GameState {
     running: bool,
     pub keyboard_event: Option<Event>,
     pub score: u64,
-    // pub drawables_in_frame: Vec<dyn Drawable>,
+    game_over: bool, // pub drawables_in_frame: Vec<dyn Drawable>,
 }
 
 pub const ASTEROID_DESTROYED_POINTS: u64 = 1;
@@ -13,6 +13,7 @@ impl GameState {
     pub fn new() -> Self {
         Self {
             running: false,
+            game_over: false,
             keyboard_event: None,
             score: 0,
         }
@@ -30,6 +31,13 @@ impl GameState {
 
     pub fn start_game(&mut self) -> &mut Self {
         self.running = true;
+
+        self
+    }
+
+    pub fn handle_game_over(&mut self) -> &mut Self {
+        self.game_over = true;
+        self.stop_game();
 
         self
     }

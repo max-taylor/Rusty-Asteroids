@@ -22,7 +22,7 @@ trait CanSpawn {
 }
 
 impl Player {
-    pub fn new(mut default_position: Option<Point<i64>>) -> Self {
+    pub fn new(mut default_position: Option<Point<i64>>, initial_health: u32) -> Self {
         if default_position.is_none() {
             default_position = Some(Point {
                 width: 5,
@@ -39,7 +39,7 @@ impl Player {
                 DrawableType::Player,
                 None,
             ),
-            health: 20,
+            health: initial_health,
             bullet_entity_controller: EntityController::new(),
         }
     }

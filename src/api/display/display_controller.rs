@@ -56,21 +56,7 @@ impl DisplayController {
         game_state: &GameState,
         lives: u32,
     ) -> DisplayControllerResult<&mut Self> {
-        let heart_map = map_from_str(HEART, Color::Red);
-
-        self.layout
-            .draw_map(&heart_map, Point::new(5, 2), &Default::default())?;
-
-        self.layout.draw_map(
-            &map_from_str(X, Color::Black),
-            Point::new(19, 3),
-            &Default::default(),
-        )?;
-
-        self.draw_u32(lives, Point::new(27, 2))?;
-
-        self.draw_str("Lives", DEFAULT_BACKGROUND, Color::Red, Point::new(19, 0))?;
-
+        self.draw_lives(lives)?;
         // self.layout.draw_map(
         //     &self.numbers[lives as usize],
         //     Point::new(20, 2),
@@ -93,6 +79,38 @@ impl DisplayController {
         // )?;
 
         Ok(self)
+    }
+    //
+
+    fn draw_lives(&mut self, lives: u32) -> DisplayControllerResult<()> {
+        let heart_map = map_from_str(HEART, Color::Red);
+
+        // let mut width = 38;
+
+        // if lives > 9 {
+        //     width += 8;
+        // }
+
+        self.layout.draw_rect(
+            &Point::new(0, 0),
+            &Point::new(46, 8),
+            Element::new('❤', DEFAULT_BACKGROUND, Color::Red),
+        )?;
+
+        self.layout
+            .draw_map(&heart_map, Point::new(5, 2), &Default::default())?;
+
+        self.layout.draw_map(
+            &map_from_str(X, Color::Black),
+            Point::new(19, 3),
+            &Default::default(),
+        )?;
+
+        self.draw_u32(lives, Point::new(27, 2))?;
+
+        self.draw_str("Lives", DEFAULT_BACKGROUND, Color::Red, Point::new(19, 1))?;
+
+        Ok(())
     }
 
     pub fn draw_u32(

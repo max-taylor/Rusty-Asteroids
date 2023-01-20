@@ -1,4 +1,4 @@
-use std::{io::stdout, panic, time::Duration};
+use std::panic;
 
 use crossterm::event::{poll, read, Event, KeyCode};
 
@@ -6,44 +6,35 @@ use crate::{
     api::display::{get_screen_size, DisplayController, Output, Point},
     components::{Drawable, DrawableState, Health},
     entities::{Borders, Controller, Player},
-    helpers::{get_keyboard_event, get_now},
     systems::{get_collision_summary, run_collision_detection, AsteroidController},
-    user_display::GAME_OVER_TEXT,
 };
 
 use super::{
-    app_errors::AppError,
+    app_errors::{AppError, AppResult},
     game_state::{GameState, ASTEROID_DESTROYED_POINTS},
 };
 
 pub struct App {
     display_controller: DisplayController,
-    output: Output,
-    game_state: GameState,
     borders: Borders,
     player: Player,
     asteroid_controller: AsteroidController,
     dimensions: Point<i64>,
 }
 
+pub struct InitialGameState {
+    pub player_health: u32,
+}
+
 const HUD_HEIGHT: i64 = 10;
 
-pub type AppResult<T> = Result<T, AppError>;
-
 impl App {
-    pub fn new() -> AppResult<App> {
-        let mut output = Output::new(stdout());
+    pub fn new(dimensions: Point<i64>, init_game_state: InitialGameState) -> AppResult<App> {
+        let game_screen_size = dimensions.sub_height(HUD_HEIGHT);
 
-        let screen_size = get_screen_size();
-
-        let game_screen_size = screen_size.sub_height(HUD_HEIGHT);
-
-        let game_display_controller =
-            DisplayController::new(screen_size, Point::new(0, HUD_HEIGHT));
+        let game_display_controller = DisplayController::new(dimensions, Point::new(0, HUD_HEIGHT));
 
         if let Some(error) = game_display_controller.as_ref().err() {
-            output.close()?;
-
             return Err(AppError::DisplayControllerError(error.clone()));
         }
 
@@ -51,96 +42,74 @@ impl App {
 
         Ok(App {
             display_controller: game_display_controller,
-            game_state: GameState::new(),
             borders: Borders::new(&game_screen_size)?,
-            output,
-            player: Player::new(None),
+            player: Player::new(None, init_game_state.player_health),
             asteroid_controller: AsteroidController::new(100, game_screen_size),
-            dimensions: screen_size,
+            dimensions,
         })
     }
 
     /// Reset method to be called at the start of each loop
     fn reset(&mut self) {
-        self.game_state.keyboard_event = None;
+        // self.game_state.keyboard_event = None;
 
         self.display_controller.layout.reset();
     }
 
     /// Process the keyboard events, also returns true if the user closes the game with escape
-    fn handle_keyboard(&mut self) -> AppResult<()> {
-        let event = get_keyboard_event()?;
-
-        if let Some(event) = event {
-            if event == Event::Key(KeyCode::Esc.into()) {
-                self.game_state.stop_game();
-
-                return Ok(());
-            }
-
+    fn handle_keyboard(&mut self, keyboard_input: Option<&Event>) -> AppResult<()> {
+        if let Some(event) = keyboard_input {
             self.player.handle_event(&event);
-
-            self.game_state.keyboard_event = Some(event);
         }
 
         Ok(())
     }
 
-    fn run_game_loop(&mut self) -> AppResult<()> {
-        while self.game_state.is_running() {
-            let game_loop_start = get_now();
-            self.reset();
+    pub fn run_next_game_frame(
+        &mut self,
+        output: &mut Output,
+        game_state: &mut GameState,
+        game_loop_duration: u128,
+    ) -> AppResult<()> {
+        self.reset();
 
-            self.handle_keyboard()?;
+        self.handle_keyboard(game_state.keyboard_event.as_ref())?;
 
-            let game_loop_duration = get_now() - game_loop_start;
+        self.asteroid_controller
+            .handle_game_loop(game_loop_duration);
 
-            self.asteroid_controller
-                .handle_game_loop(game_loop_duration);
+        self.update_positions(game_loop_duration);
 
-            self.update_positions(game_loop_duration);
+        self.handle_collisions(game_state)?;
 
-            self.handle_collisions()?;
-
-            self.draw_all_entities()?;
-        }
+        self.draw_all_entities(game_state, output)?;
 
         Ok(())
     }
 
-    pub fn run(&mut self) -> AppResult<()> {
-        self.start()?;
+    // fn run_game_loop(&mut self) -> AppResult<()> {
+    //     while self.game_state.is_running() {
+    //         let game_loop_start = get_now();
+    //         self.reset();
 
-        let result = self.run_game_loop();
+    //         // self.handle_keyboard()?;
 
-        if let Err(err) = result.as_ref() {
-            match err {
-                AppError::OutOfLives => {
-                    self.reset();
-                    dbg!("HERE22");
-                    let result = self.display_controller.layout.draw_str(
-                        GAME_OVER_TEXT,
-                        &Point::new(0, 0),
-                        None,
-                        None,
-                    );
+    //         let game_loop_duration = get_now() - game_loop_start;
 
-                    dbg!(result.err());
+    //         self.asteroid_controller
+    //             .handle_game_loop(game_loop_duration);
 
-                    // while true {}
-                }
-                _ => {
-                    dbg!("IN THIS ONE");
-                }
-            }
-        }
+    //         self.update_positions(game_loop_duration);
 
-        self.shut_down()?;
+    //         self.handle_collisions()?;
 
-        result
-    }
+    //         self.draw_all_entities()?;
+    //     }
 
-    fn handle_collisions(&mut self) -> AppResult<&mut Self> {
+    //     Ok(())
+    // }
+
+    fn handle_collisions(&mut self, game_state: &mut GameState) -> AppResult<&mut Self> {
         let collision_results = get_collision_summary(run_collision_detection(
             self.get_all_drawable_states(),
             &self.dimensions,
@@ -159,7 +128,7 @@ impl App {
                     .apply_entity_damage(uuid, collision.damage);
 
                 if destroyed {
-                    self.game_state.score += ASTEROID_DESTROYED_POINTS;
+                    game_state.score += ASTEROID_DESTROYED_POINTS;
                 }
             } else if self.player.bullet_entity_controller.has_entity(uuid) {
                 // Bullet collision
@@ -171,7 +140,7 @@ impl App {
                 self.player.apply_damage(collision.damage);
 
                 if self.player.get_health() == 0 {
-                    return Err(AppError::OutOfLives);
+                    game_state.handle_game_over();
                 }
             } else {
                 // Use a lazy panic here because this shouldn't happen
@@ -217,7 +186,11 @@ impl App {
     }
 
     /// Method to handle drawing all the entities that will be rendered
-    fn draw_all_entities(&mut self) -> AppResult<&mut Self> {
+    fn draw_all_entities(
+        &mut self,
+        game_state: &mut GameState,
+        output: &mut Output,
+    ) -> AppResult<&mut Self> {
         self.display_controller
             .draw_drawable(&self.player.get_drawable_state())?;
 
@@ -232,23 +205,10 @@ impl App {
             .draw_drawable(&self.borders.get_drawable_state())?;
 
         self.display_controller
-            .draw_game_state(&self.game_state, self.player.get_health())?;
+            .draw_game_state(game_state, self.player.get_health())?;
 
-        self.output.print_display(&self.display_controller.layout)?;
+        output.print_display(&self.display_controller.layout)?;
 
         Ok(self)
-    }
-
-    pub fn start(&mut self) -> AppResult<()> {
-        self.game_state.start_game();
-        self.output.start()?;
-
-        Ok(())
-    }
-
-    pub fn shut_down(&mut self) -> AppResult<()> {
-        self.output.close()?;
-
-        Ok(())
     }
 }
