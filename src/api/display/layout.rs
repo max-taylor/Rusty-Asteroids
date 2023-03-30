@@ -294,10 +294,11 @@ impl Layout {
     ) -> Result<&mut Self, DisplayControllerError> {
         match direction {
             Direction::Horizontal => {
-                let row = self.get_row_mut(start_position.height)?;
-
                 for index in 0..len {
-                    row[index as usize] = Some(element);
+                    let existing_element =
+                        self.get_element_mut(&start_position.add_width(index))?;
+
+                    *existing_element = Some(element);
                 }
             }
             Direction::Vertical => {

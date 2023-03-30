@@ -15,9 +15,15 @@ pub struct DisplayController {
     entity_drawable_offset: Point<i64>,
     pub layout: Layout,
     numbers: Vec<Map>,
+    screen_size: Point<i64>,
 }
 
 type DisplayControllerResult<T> = Result<T, DisplayControllerError>;
+
+pub const GAME_DETAILS_BOX_WIDTH: u64 = 43;
+const BOX_PADDING: u64 = 1;
+
+pub const MINIMUM_SCREEN_WIDTH: u64 = (GAME_DETAILS_BOX_WIDTH + BOX_PADDING) * 2;
 
 pub fn get_screen_size() -> Point<i64> {
     let (rows, columns) = size().unwrap();
@@ -48,6 +54,7 @@ impl DisplayController {
             // The offset is where all drawing will be done, this is the center of the terminal screen
             entity_drawable_offset,
             numbers,
+            screen_size: get_screen_size(),
         })
     }
 
@@ -57,6 +64,7 @@ impl DisplayController {
         lives: u32,
     ) -> DisplayControllerResult<&mut Self> {
         self.draw_lives(lives)?;
+        self.draw_score(game_state.score)?;
         // self.layout.draw_map(
         //     &self.numbers[lives as usize],
         //     Point::new(20, 2),
@@ -80,20 +88,13 @@ impl DisplayController {
 
         Ok(self)
     }
-    //
 
     fn draw_lives(&mut self, lives: u32) -> DisplayControllerResult<()> {
         let heart_map = map_from_str(HEART, Color::Red);
 
-        // let mut width = 38;
-
-        // if lives > 9 {
-        //     width += 8;
-        // }
-
         self.layout.draw_rect(
-            &Point::new(0, 0),
-            &Point::new(46, 8),
+            &Point::new(BOX_PADDING as i64, 0),
+            &Point::new(GAME_DETAILS_BOX_WIDTH as i64, 8),
             Element::new('❤', DEFAULT_BACKGROUND, Color::Red),
         )?;
 
@@ -109,6 +110,32 @@ impl DisplayController {
         self.draw_u32(lives, Point::new(27, 2))?;
 
         self.draw_str("Lives", DEFAULT_BACKGROUND, Color::Red, Point::new(19, 1))?;
+
+        Ok(())
+    }
+
+    fn draw_score(&mut self, score: u64) -> DisplayControllerResult<()> {
+        let start_position = Point {
+            height: 0,
+            width: self.screen_size.width - GAME_DETAILS_BOX_WIDTH as i64,
+        };
+
+        self.layout.draw_rect(
+            &start_position,
+            &Point::new(GAME_DETAILS_BOX_WIDTH as i64, 8),
+            Element::new('⦿', DEFAULT_BACKGROUND, Color::Cyan),
+        )?;
+
+        self.draw_u32(score as u32, Point::new(start_position.width + 5, 2))?;
+
+        self.draw_str(
+            "Score",
+            DEFAULT_BACKGROUND,
+            Color::Cyan,
+            Point::new(start_position.width + 19, 1),
+        )?;
+
+        // self.draw_str("Score", DEFAULT_BACKGROUND, Color::Red, Point::new(80, 1))?;
 
         Ok(())
     }

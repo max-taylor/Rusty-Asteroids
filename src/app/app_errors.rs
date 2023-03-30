@@ -5,6 +5,7 @@ use crate::api::display::DisplayControllerError;
 #[derive(Debug)]
 pub enum AppError {
     DisplayControllerError(DisplayControllerError),
+    ScreenWidthTooSmall(u64, u64),
 }
 
 impl From<DisplayControllerError> for AppError {

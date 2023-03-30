@@ -18,7 +18,10 @@ impl<'name> DifficultyDisplay<'name> {
     pub fn new(name: &'name str, level: u32, position: Point<i64>) -> DifficultyResult<Self> {
         let screen_size = get_screen_size();
 
-        let size = screen_size / (2 as i64).into();
+        let size = Point {
+            width: screen_size.width - 12,
+            height: screen_size.height / 5,
+        };
 
         let mut parent_element = Layout::new(&size, None);
 
