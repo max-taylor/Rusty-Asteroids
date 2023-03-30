@@ -128,7 +128,7 @@ impl App {
                     .apply_entity_damage(uuid, collision.damage);
 
                 if destroyed {
-                    game_state.score += ASTEROID_DESTROYED_POINTS;
+                    game_state.score += collision.points;
                 }
             } else if self.player.bullet_entity_controller.has_entity(uuid) {
                 // Bullet collision

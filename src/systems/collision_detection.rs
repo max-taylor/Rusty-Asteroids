@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::{
     api::display::{collapse_twoDVec, create_map, Point, TwoDVec},
+    app::ASTEROID_DESTROYED_POINTS,
     components::{DrawableState, DrawableType},
 };
 
@@ -12,6 +13,7 @@ pub struct CollisionOutcome {
     pub affected_damage: u32,
     pub enemy_damage: u32,
     pub asteroid_uuid: Uuid,
+    pub points: u64,
 }
 
 #[derive(Clone, Debug, Copy)]
@@ -140,6 +142,7 @@ pub fn run_collision_detection(
                                             affected_damage: enemy_damage,
                                             enemy_damage: PLAYER_ENEMY_COLLISION_DAMAGE,
                                             asteroid_uuid: enemy.uuid,
+                                            points: 0,
                                         },
                                     );
                                 } else {
@@ -154,6 +157,7 @@ pub fn run_collision_detection(
                                                 affected_damage: enemy_damage,
                                                 enemy_damage: ammunition_damage,
                                                 asteroid_uuid: enemy.uuid,
+                                                points: ASTEROID_DESTROYED_POINTS,
                                             },
                                         );
                                     }
@@ -175,15 +179,28 @@ pub fn run_collision_detection(
 pub struct Summary {
     pub uuid: Uuid,
     pub damage: u32,
+    pub points: u64,
 }
 
 pub type CollisionSummary = HashMap<Uuid, Summary>;
 
-pub fn apply_damage_to_uuid(collision_summary: &mut CollisionSummary, uuid: Uuid, damage: u32) {
+pub fn apply_damage_to_uuid(
+    collision_summary: &mut CollisionSummary,
+    uuid: Uuid,
+    damage: u32,
+    points: u64,
+) {
     match collision_summary.get_mut(&uuid) {
         Some(item) => item.damage += damage,
         None => {
-            collision_summary.insert(uuid, Summary { uuid, damage });
+            collision_summary.insert(
+                uuid,
+                Summary {
+                    uuid,
+                    damage,
+                    points,
+                },
+            );
         }
     };
 }
@@ -199,12 +216,14 @@ pub fn get_collision_summary(collision_results: CollisionResults) -> CollisionSu
                 &mut collision_summary,
                 uuid,
                 asteroid_collision.affected_damage,
+                0,
             );
             // Also apply damage to the asteroid
             apply_damage_to_uuid(
                 &mut collision_summary,
                 asteroid_collision.asteroid_uuid,
                 asteroid_collision.enemy_damage,
+                asteroid_collision.points,
             );
         }
     }
@@ -263,7 +282,7 @@ mod tests {
      */
     #[test]
     fn it_should_return_no_collisions_when_providing_player_and_ammunition() {
-        let player = Player::new(Some(POSITION));
+        let player = Player::new(Some(POSITION), 5);
         let ammunition = Bullet::build_basic_bullet(POSITION);
 
         let drawable_states = vec![player.get_drawable_state(), ammunition.get_drawable_state()];
@@ -284,7 +303,7 @@ mod tests {
      */
     #[test]
     fn it_should_return_a_collision_for_a_player_and_asteroid() {
-        let player = Player::new(Some(POSITION));
+        let player = Player::new(Some(POSITION), 5);
 
         let asteroid = get_asteroid_mock();
 
@@ -362,7 +381,7 @@ mod tests {
      */
     #[test]
     fn it_should_return_a_single_collision_for_player_and_multiple_occurrences_of_asteroid() {
-        let player = Player::new(Some(POSITION));
+        let player = Player::new(Some(POSITION), 5);
 
         let mut drawable_states = vec![player.get_drawable_state()];
 
@@ -388,7 +407,7 @@ mod tests {
 
     #[test]
     fn it_should_return_collisions_and_summarize_for_a_player_ammunition_and_multiple_asteroids() {
-        let player = Player::new(Some(POSITION));
+        let player = Player::new(Some(POSITION), 5);
         let asteroid1 = get_asteroid_mock();
         let asteroid2 = get_asteroid_mock();
         let ammunition = Bullet::build_basic_bullet(POSITION);
