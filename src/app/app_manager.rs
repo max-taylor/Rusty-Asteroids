@@ -51,7 +51,7 @@ const DIFFICULTIES: &'static [DifficultyOption] = &[
 
 const GAME_LOOP_DELAY: u64 = 75;
 
-const INIT_GAME_STATE: InitialGameState = InitialGameState { player_health: 1 };
+const INIT_GAME_STATE: InitialGameState = InitialGameState { player_health: 3 };
 
 impl AppManager {
     pub fn new(dimensions: Point<i64>) -> AppResult<AppManager> {
@@ -206,7 +206,7 @@ impl AppManager {
             )?;
 
             display_controller.draw_str(
-                "or EXIT to close",
+                "or ESC to close",
                 DEFAULT_BACKGROUND,
                 Color::Red,
                 Point {
