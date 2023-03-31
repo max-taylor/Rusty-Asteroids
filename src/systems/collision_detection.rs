@@ -147,8 +147,10 @@ pub fn run_collision_detection(
                                     );
                                 } else {
                                     // If the asteroid collided with ammunition, extract the ammunition damage
-                                    if let DrawableType::Ammunition(ammunition_damage) =
-                                        element.drawable_type
+                                    if let DrawableType::Ammunition(
+                                        ammunition_damage,
+                                        collision_points,
+                                    ) = element.drawable_type
                                     {
                                         // Apply the enemies damage to the ammunition and the ammunition's damage to the enemy
                                         element_collisions.insert(
@@ -157,7 +159,7 @@ pub fn run_collision_detection(
                                                 affected_damage: enemy_damage,
                                                 enemy_damage: ammunition_damage,
                                                 asteroid_uuid: enemy.uuid,
-                                                points: ASTEROID_DESTROYED_POINTS,
+                                                points: collision_points as u64,
                                             },
                                         );
                                     }

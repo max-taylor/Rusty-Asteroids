@@ -17,7 +17,7 @@ pub enum DrawableType {
     Enemy(u32),
     Border,
     // Damage of ammunition
-    Ammunition(u32),
+    Ammunition(u32, u32),
 }
 
 impl DrawableState {

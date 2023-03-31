@@ -30,7 +30,7 @@ impl Bullet {
             drawable: DrawableState::new(
                 map,
                 location,
-                DrawableType::Ammunition(BULLET_DAMAGE),
+                DrawableType::Ammunition(BULLET_DAMAGE, 3),
                 Some(velocity),
             ),
             health: 1,
@@ -49,7 +49,7 @@ impl Bullet {
             drawable: DrawableState::new(
                 map,
                 location,
-                DrawableType::Ammunition(BULLET_DAMAGE),
+                DrawableType::Ammunition(BULLET_DAMAGE, 1),
                 Some(velocity),
             ),
             health: 5,
