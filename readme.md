@@ -1,5 +1,7 @@
 # Rusty Asteroids
 
+![Demo Video](https://github.com/max-taylor/Rusty-Asteroids/blob/main/demo.gif)
+
 Game written entirely in Rust to help me learn the language.
 
 Using [crossterm](https://github.com/crossterm-rs/crossterm) to handling writing to stdout, allows you to specify coordinates to write characters and also colors.
@@ -7,10 +9,6 @@ Using [crossterm](https://github.com/crossterm-rs/crossterm) to handling writing
 Not using any game framework, simply creating 2D matrices to represent actors (player, asteroids, bullets) and using a simple game loop to update positions, respond to keyboard events and handle collisions.
 
 Tried to follow ECS (entity component system) where possible.
-
-# Demo
-
-![Demo Video](https://github.com/max-taylor/Rusty-Asteroids/blob/main/demo.gif)
 
 # Game
 
