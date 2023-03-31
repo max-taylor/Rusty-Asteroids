@@ -11,7 +11,7 @@ use crate::{
 
 use super::{
     app_errors::{AppError, AppResult},
-    game_state::{GameState, ASTEROID_DESTROYED_POINTS},
+    game_state::GameState,
 };
 
 pub struct App {
@@ -152,8 +152,10 @@ impl App {
     }
 
     fn update_positions(&mut self, game_loop_duration: u128) -> &mut Self {
-        self.player
-            .update_position(Some(&self.dimensions), game_loop_duration);
+        self.player.update_position(
+            Some(&self.display_controller.drawable_dimensions),
+            game_loop_duration,
+        );
 
         self.player
             .bullet_entity_controller

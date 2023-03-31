@@ -14,7 +14,7 @@ use super::{display_controller_error::DisplayControllerError, Layout};
 pub struct DisplayController {
     entity_drawable_offset: Point<i64>,
     pub layout: Layout,
-    numbers: Vec<Map>,
+    pub drawable_dimensions: Point<i64>,
     screen_size: Point<i64>,
 }
 
@@ -43,17 +43,11 @@ impl DisplayController {
         dimensions: Point<i64>,
         entity_drawable_offset: Point<i64>,
     ) -> Result<Self, DisplayControllerError> {
-        let mut numbers: Vec<Map> = vec![create_map(&Default::default(), None); 10];
-
-        for idx in 0..10 {
-            numbers[idx] = map_from_str(NUMBER_VECTOR[idx], Color::Black);
-        }
-
         Ok(DisplayController {
             layout: Layout::new(&dimensions, None),
+            drawable_dimensions: dimensions - entity_drawable_offset,
             // The offset is where all drawing will be done, this is the center of the terminal screen
             entity_drawable_offset,
-            numbers,
             screen_size: get_screen_size(),
         })
     }
@@ -65,26 +59,6 @@ impl DisplayController {
     ) -> DisplayControllerResult<&mut Self> {
         self.draw_lives(lives)?;
         self.draw_score(game_state.score)?;
-        // self.layout.draw_map(
-        //     &self.numbers[lives as usize],
-        //     Point::new(20, 2),
-        //     &Default::default(),
-        // )?;
-
-        // self.layout
-        //     .draw_str(HEART, &Point::new(5, 2), None, Some(Color::Red))?;
-
-        // let life_elements = vec![Some(LIFE_ELEMENT); lives as usize];
-
-        // self.layout.draw_element_array(life_elements)?;
-
-        // Convert the score string into an array of elements for simple printing to the display
-        // let score_array = parse_str_to_element_array(&game_state.score.to_string(), None, None);
-
-        // self.layout.draw_element_array(
-        //     score_array,
-        //     &Point::new(self.layout.dimensions.width - 5, 2),
-        // )?;
 
         Ok(self)
     }
@@ -107,7 +81,7 @@ impl DisplayController {
             &Default::default(),
         )?;
 
-        self.draw_u32(lives, Point::new(27, 2))?;
+        self.draw_u32(lives, Point::new(27, 2), Color::Red)?;
 
         self.draw_str("Lives", DEFAULT_BACKGROUND, Color::Red, Point::new(19, 1))?;
 
@@ -126,7 +100,11 @@ impl DisplayController {
             Element::new('⦿', DEFAULT_BACKGROUND, Color::Cyan),
         )?;
 
-        self.draw_u32(score as u32, Point::new(start_position.width + 5, 2))?;
+        self.draw_u32(
+            score as u32,
+            Point::new(start_position.width + 5, 2),
+            Color::Cyan,
+        )?;
 
         self.draw_str(
             "Score",
@@ -135,8 +113,6 @@ impl DisplayController {
             Point::new(start_position.width + 19, 1),
         )?;
 
-        // self.draw_str("Score", DEFAULT_BACKGROUND, Color::Red, Point::new(80, 1))?;
-
         Ok(())
     }
 
@@ -144,13 +120,14 @@ impl DisplayController {
         &mut self,
         numbers: u32,
         start_position: Point<i64>,
+        color: Color,
     ) -> DisplayControllerResult<()> {
         let mut location = start_position;
         for char in numbers.to_string().chars() {
             let number_val: u32 = char.to_digit(10).unwrap();
 
             self.layout.draw_map(
-                &map_from_str(NUMBER_VECTOR[number_val as usize], Color::Red),
+                &map_from_str(NUMBER_VECTOR[number_val as usize], color),
                 location,
                 &Default::default(),
             )?;
