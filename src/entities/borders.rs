@@ -12,7 +12,7 @@ pub struct Borders {
 }
 
 impl Borders {
-    pub fn new(dimensions: &Point<i64>) -> Result<Self, DisplayControllerError> {
+    pub fn new(dimensions: &Point<i64>, color: Color) -> Result<Self, DisplayControllerError> {
         let mut drawable = DrawableState {
             layout: Layout::new(dimensions, None),
             location: Point::default(),
@@ -24,7 +24,7 @@ impl Borders {
         drawable.layout.draw_rect(
             &Default::default(),
             dimensions,
-            Element::new(' ', Color::Red, Color::Red),
+            Element::new(' ', color, color),
         )?;
 
         Ok(Self { drawable })

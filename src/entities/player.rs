@@ -47,7 +47,7 @@ impl Player {
     fn get_center_of_player(&self) -> Point<i64> {
         self.drawable
             .location
-            .add_width(self.drawable.layout.dimensions.width / 2)
+            .add_width(self.drawable.layout.dimensions.width / 2 - 1)
     }
 }
 
@@ -89,15 +89,15 @@ impl Controller for Player {
     }
 
     fn additional_event_logic(&mut self, event: &crossterm::event::Event) -> &mut Self {
-        if event == &create_event(KeyCode::Char(' ')) {
+        if event == &create_event(KeyCode::Char('q')) {
             self.bullet_entity_controller
                 .spawn_entity(Bullet::build_basic_bullet(
-                    self.get_center_of_player().add_height(1),
+                    self.get_center_of_player().sub_height(2),
                 ));
-        } else if event == &create_event(KeyCode::Enter) {
+        } else if event == &create_event(KeyCode::Char(' ')) {
             self.bullet_entity_controller
                 .spawn_entity(Bullet::build_spread_bullet(
-                    self.get_center_of_player().sub_width(4),
+                    self.get_center_of_player().sub_width(4).sub_height(3),
                 ));
         }
 

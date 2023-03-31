@@ -1,3 +1,5 @@
+use crossterm::style::Color;
+
 use crate::{
     api::display::{
         create_map, get_screen_size, map_from_str, DisplayControllerError, Layout, Map, Point,
@@ -25,7 +27,7 @@ impl<'name> DifficultyDisplay<'name> {
 
         let mut parent_element = Layout::new(&size, None);
 
-        let border = Borders::new(&(size - (1 as i64).into()))?;
+        let border = Borders::new(&(size - (1 as i64).into()), Color::Red)?;
 
         parent_element.draw_map(&border.drawable.layout.map, position, &Default::default())?;
 

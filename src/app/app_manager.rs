@@ -1,14 +1,19 @@
 use std::io::stdout;
 
-use crossterm::event::{Event, KeyCode};
+use crossterm::{
+    event::{Event, KeyCode},
+    style::Color,
+};
 
 use crate::{
     api::display::{
-        DisplayController, DisplayControllerError, Output, Point, GAME_DETAILS_BOX_WIDTH,
+        element::DEFAULT_BACKGROUND, map_from_str, DisplayController, Output, Point,
         MINIMUM_SCREEN_WIDTH,
     },
+    components::Drawable,
+    entities::Borders,
     helpers::{get_keyboard_event, get_now},
-    user_display::DifficultyDisplay,
+    user_display::{DifficultyDisplay, GAME_OVER_TEXT},
 };
 
 use super::{
@@ -46,7 +51,7 @@ const DIFFICULTIES: &'static [DifficultyOption] = &[
 
 const GAME_LOOP_DELAY: u64 = 75;
 
-const INIT_GAME_STATE: InitialGameState = InitialGameState { player_health: 50 };
+const INIT_GAME_STATE: InitialGameState = InitialGameState { player_health: 1 };
 
 impl AppManager {
     pub fn new(dimensions: Point<i64>) -> AppResult<AppManager> {
@@ -70,8 +75,21 @@ impl AppManager {
     pub fn run(&mut self) -> AppResult<()> {
         self.output.start()?;
 
-        self.start_and_run_game()?;
-        // self.run_difficulty_selection()?;
+        let mut is_running = true;
+
+        while is_running {
+            self.start_and_run_game()?;
+
+            if self.game_state.game_over {
+                let new_game = self.handle_game_over()?;
+                if !new_game {
+                    is_running = false;
+                }
+            } else {
+                // If the user exited or an error was encountered
+                is_running = false;
+            }
+        }
 
         self.shut_down()?;
 
@@ -118,6 +136,89 @@ impl AppManager {
         self.output.close()?;
 
         Ok(())
+    }
+
+    fn handle_game_over(&mut self) -> AppResult<bool> {
+        let mut display_controller = DisplayController::new(self.dimensions, Default::default())?;
+
+        let mut while_running = true;
+        let mut new_game = false;
+
+        let border = Borders::new(&self.dimensions, Color::Blue)?;
+
+        let draw_start_height = self.dimensions.height / 2 - 10;
+
+        while while_running {
+            display_controller.layout.reset();
+
+            let event = get_keyboard_event(GAME_LOOP_DELAY)?;
+
+            if let Some(event) = event {
+                if event == Event::Key(KeyCode::Esc.into()) {
+                    while_running = false;
+                }
+                if event == Event::Key(KeyCode::Enter.into()) {
+                    new_game = true;
+                    while_running = false;
+                }
+            }
+
+            display_controller.draw_drawable(&border.get_drawable_state())?;
+
+            display_controller.layout.draw_map(
+                &map_from_str(GAME_OVER_TEXT, Color::Green),
+                Point {
+                    height: draw_start_height,
+                    width: self.dimensions.width / 2 - 47,
+                },
+                &Default::default(),
+            )?;
+
+            display_controller.draw_str(
+                "Score:",
+                DEFAULT_BACKGROUND,
+                Color::Red,
+                Point {
+                    height: draw_start_height + 10,
+                    width: self.dimensions.width / 2 - 5,
+                },
+            )?;
+
+            let score_items = self.game_state.score.to_string().len();
+
+            display_controller.draw_u32(
+                self.game_state.score as u32,
+                Point {
+                    height: draw_start_height + 12,
+                    width: self.dimensions.width / 2 - (2 + score_items as i64 * 3),
+                },
+                Color::Blue,
+            )?;
+
+            display_controller.draw_str(
+                "Press ENTER for new game",
+                DEFAULT_BACKGROUND,
+                Color::Green,
+                Point {
+                    height: self.dimensions.height - 4,
+                    width: self.dimensions.width / 2 - 13,
+                },
+            )?;
+
+            display_controller.draw_str(
+                "or EXIT to close",
+                DEFAULT_BACKGROUND,
+                Color::Red,
+                Point {
+                    height: self.dimensions.height - 3,
+                    width: self.dimensions.width / 2 - 9,
+                },
+            )?;
+
+            self.output.print_display(&display_controller.layout)?;
+        }
+
+        Ok(new_game)
     }
 
     fn run_difficulty_selection(&mut self) -> AppResult<DifficultyOption> {

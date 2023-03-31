@@ -23,7 +23,7 @@ type DisplayControllerResult<T> = Result<T, DisplayControllerError>;
 pub const GAME_DETAILS_BOX_WIDTH: u64 = 43;
 const BOX_PADDING: u64 = 1;
 
-pub const MINIMUM_SCREEN_WIDTH: u64 = (GAME_DETAILS_BOX_WIDTH + BOX_PADDING) * 2;
+pub const MINIMUM_SCREEN_WIDTH: u64 = (GAME_DETAILS_BOX_WIDTH + BOX_PADDING) * 2 + 10;
 
 pub fn get_screen_size() -> Point<i64> {
     let (rows, columns) = size().unwrap();

@@ -1,6 +1,9 @@
 use std::panic;
 
-use crossterm::event::{poll, read, Event, KeyCode};
+use crossterm::{
+    event::{poll, read, Event, KeyCode},
+    style::Color,
+};
 
 use crate::{
     api::display::{get_screen_size, DisplayController, Output, Point},
@@ -42,7 +45,7 @@ impl App {
 
         Ok(App {
             display_controller: game_display_controller,
-            borders: Borders::new(&game_screen_size)?,
+            borders: Borders::new(&game_screen_size, Color::Red)?,
             player: Player::new(None, init_game_state.player_health),
             asteroid_controller: AsteroidController::new(100, game_screen_size),
             dimensions,
@@ -51,8 +54,6 @@ impl App {
 
     /// Reset method to be called at the start of each loop
     fn reset(&mut self) {
-        // self.game_state.keyboard_event = None;
-
         self.display_controller.layout.reset();
     }
 
@@ -86,28 +87,6 @@ impl App {
 
         Ok(())
     }
-
-    // fn run_game_loop(&mut self) -> AppResult<()> {
-    //     while self.game_state.is_running() {
-    //         let game_loop_start = get_now();
-    //         self.reset();
-
-    //         // self.handle_keyboard()?;
-
-    //         let game_loop_duration = get_now() - game_loop_start;
-
-    //         self.asteroid_controller
-    //             .handle_game_loop(game_loop_duration);
-
-    //         self.update_positions(game_loop_duration);
-
-    //         self.handle_collisions()?;
-
-    //         self.draw_all_entities()?;
-    //     }
-
-    //     Ok(())
-    // }
 
     fn handle_collisions(&mut self, game_state: &mut GameState) -> AppResult<&mut Self> {
         let collision_results = get_collision_summary(run_collision_detection(

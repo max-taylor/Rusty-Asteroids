@@ -4,7 +4,7 @@ pub struct GameState {
     running: bool,
     pub keyboard_event: Option<Event>,
     pub score: u64,
-    game_over: bool, // pub drawables_in_frame: Vec<dyn Drawable>,
+    pub game_over: bool,
 }
 
 pub const ASTEROID_DESTROYED_POINTS: u64 = 1;
