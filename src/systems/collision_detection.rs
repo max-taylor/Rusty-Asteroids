@@ -4,7 +4,6 @@ use uuid::Uuid;
 
 use crate::{
     api::display::{collapse_twoDVec, create_map, Point, TwoDVec},
-    app::ASTEROID_DESTROYED_POINTS,
     components::{DrawableState, DrawableType},
 };
 

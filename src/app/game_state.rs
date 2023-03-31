@@ -7,8 +7,6 @@ pub struct GameState {
     pub game_over: bool,
 }
 
-pub const ASTEROID_DESTROYED_POINTS: u64 = 1;
-
 impl GameState {
     pub fn new() -> Self {
         Self {
@@ -30,7 +28,10 @@ impl GameState {
     }
 
     pub fn start_game(&mut self) -> &mut Self {
+        self.game_over = false;
+        self.score = 0;
         self.running = true;
+        self.keyboard_event = None;
 
         self
     }

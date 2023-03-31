@@ -84,6 +84,9 @@ impl AppManager {
                 let new_game = self.handle_game_over()?;
                 if !new_game {
                     is_running = false;
+                } else {
+                    self.game_state.game_over = false;
+                    self.game_state.score = 0;
                 }
             } else {
                 // If the user exited or an error was encountered
@@ -144,7 +147,7 @@ impl AppManager {
         let mut while_running = true;
         let mut new_game = false;
 
-        let border = Borders::new(&self.dimensions, Color::Blue)?;
+        let border = Borders::new(&self.dimensions, Color::Cyan)?;
 
         let draw_start_height = self.dimensions.height / 2 - 10;
 
@@ -192,7 +195,7 @@ impl AppManager {
                     height: draw_start_height + 12,
                     width: self.dimensions.width / 2 - (2 + score_items as i64 * 3),
                 },
-                Color::Blue,
+                Color::Cyan,
             )?;
 
             display_controller.draw_str(

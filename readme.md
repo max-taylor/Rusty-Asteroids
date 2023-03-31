@@ -8,6 +8,10 @@ Not using any game framework, simply creating 2D matrices to represent actors (p
 
 Tried to follow ECS (entity component system) where possible.
 
+# Demo
+
+![Demo Video](https://github.com/max-taylor/Rusty-Asteroids/blob/main/demo.gif)
+
 # Game
 
 To play the game, clone the repo and run: `cargo run`

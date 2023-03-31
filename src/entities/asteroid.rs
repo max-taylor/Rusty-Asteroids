@@ -16,7 +16,7 @@ pub struct Asteroid {
 
 impl Asteroid {
     pub fn new(location: Point<i64>, velocity: Point<i64>) -> Self {
-        let map = Layout::from_ascii(ASTEROID, Color::Grey);
+        let map = Layout::from_ascii(ASTEROID, Color::Yellow);
 
         Self {
             drawable: DrawableState::new(

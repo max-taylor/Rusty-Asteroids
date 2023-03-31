@@ -30,7 +30,7 @@ impl Player {
             });
         }
 
-        let layout = Layout::from_ascii(SPACE_SHIP, Color::Cyan);
+        let layout = Layout::from_ascii(SPACE_SHIP, Color::Green);
 
         Self {
             drawable: DrawableState::new(

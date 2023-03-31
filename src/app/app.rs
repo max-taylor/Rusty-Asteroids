@@ -45,8 +45,14 @@ impl App {
 
         Ok(App {
             display_controller: game_display_controller,
-            borders: Borders::new(&game_screen_size, Color::Red)?,
-            player: Player::new(None, init_game_state.player_health),
+            borders: Borders::new(&game_screen_size, Color::Cyan)?,
+            player: Player::new(
+                Some(Point {
+                    height: game_screen_size.height - 15,
+                    width: game_screen_size.width / 2 - 10,
+                }),
+                init_game_state.player_health,
+            ),
             asteroid_controller: AsteroidController::new(100, game_screen_size),
             dimensions,
         })
