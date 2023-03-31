@@ -1,4 +1,4 @@
-# Asteroid Abuse
+# Rusty Asteroids
 
 Game written entirely in Rust to help me learn the language.
 
